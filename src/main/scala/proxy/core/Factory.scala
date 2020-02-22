@@ -18,7 +18,7 @@ import scala.util.Using
 
 object Factory {
 
-  val delimiter: Array[Byte] = "¤".getBytes(StandardCharsets.UTF_8)
+  val delimiter: Array[Byte] = "¤☀₪큐".getBytes(StandardCharsets.UTF_8)
   val isLinux: Boolean = System.getProperty("os.name").contains("Linux")
 
   private val jsonConfig: JSONObject = Using(this.getClass.getResourceAsStream("/config.json")) {
