@@ -8,4 +8,6 @@ object ClientCacheFactory {
 
   // channelId -> channel
   val channelMap = new ConcurrentHashMap[String, Channel]
+
+  @volatile var mainChannelOption = Option.empty[Channel]
 }

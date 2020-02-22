@@ -29,7 +29,13 @@ class ServerCacheFactory {
     if (channel != null) channel.close
   }
 
-  def closeAll(): Unit = remoteChannelIdMap.values().forEach(_.close)
+  def closeAll(): Unit = {
+    val channels = remoteChannelIdMap.values()
+    remoteChannelIdMap.clear()
+    localChannelIdMap.clear()
+    channelIdMap.clear()
+    channels.forEach(_.close)
+  }
 
   def findLocalChannelId(remoteChannelId: String, consumer: String => Unit): Unit = {
     channelIdMap.entrySet().stream()

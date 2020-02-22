@@ -29,7 +29,11 @@ class ServerChildChannelHandler(bootstrap: Bootstrap, mainChannel: Channel) {
   private def writeToMain(localChannelId: String, data: ByteBuf): Unit = cacheFactory.getRemoteChannelId(localChannelId)
     .foreach(remoteChannelId => {
       val message = mainChannel.alloc().buffer()
-      message.writeByte(Message.data).writeCharSequence(remoteChannelId, StandardCharsets.UTF_8)
+
+      message
+        .writeByte(Message.data)
+        .writeCharSequence(remoteChannelId, StandardCharsets.UTF_8)
+
       message
         .writeBytes(data)
         .writeBytes(Factory.delimiter)
@@ -40,13 +44,14 @@ class ServerChildChannelHandler(bootstrap: Bootstrap, mainChannel: Channel) {
   private def passiveDisconnect(localChannelId: String): Unit = cacheFactory.getRemoteChannelId(localChannelId)
     .foreach {
       val disconnectMessage = mainChannel.alloc().buffer()
+
       disconnectMessage
         .writeByte(Message.disconnect)
         .writeCharSequence(_, StandardCharsets.UTF_8)
+
       disconnectMessage.writeBytes(Factory.delimiter)
 
       mainChannel.writeAndFlush(disconnectMessage)
-
       cacheFactory.removeAndClose(_, localChannelId)
     }
 }

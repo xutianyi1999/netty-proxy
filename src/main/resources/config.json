@@ -1,0 +1,16 @@
+{
+  "server": {
+    "localPort": 443,
+    "target": {
+      "host": "127.0.0.1",
+      "port": 8123
+    }
+  },
+  "client": {
+    "localPort": 19999,
+    "target": {
+      "host": "192.168.199.213",
+      "port": 443
+    }
+  }
+}
