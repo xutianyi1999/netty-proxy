@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets
 
 import com.alibaba.fastjson.{JSON, JSONObject}
 import io.netty.bootstrap.{Bootstrap, ServerBootstrap}
-import io.netty.buffer.{ByteBuf, Unpooled}
 import io.netty.channel.epoll.{EpollChannelOption, EpollEventLoopGroup, EpollServerSocketChannel, EpollSocketChannel}
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
@@ -19,7 +18,7 @@ import scala.util.Using
 
 object Factory {
 
-  val delimiter: ByteBuf = Unpooled.unreleasableBuffer(Unpooled.wrappedBuffer("¤".getBytes(StandardCharsets.UTF_8)))
+  val delimiter: Array[Byte] = "¤".getBytes(StandardCharsets.UTF_8)
   val isLinux: Boolean = System.getProperty("os.name").contains("Linux")
 
   private val jsonConfig: JSONObject = Using(this.getClass.getResourceAsStream("/config.json")) {
@@ -52,7 +51,7 @@ object Factory {
 
     val serverInitializer: ChannelInitializer[SocketChannel] = socketChannel => {
       socketChannel.pipeline()
-        .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, delimiter))
+        .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, socketChannel.alloc().buffer().writeBytes(delimiter)))
         .addLast(new ServerProxyHandler(createClient))
     }
 
@@ -70,7 +69,7 @@ object Factory {
 
     val clientInitializer: ChannelInitializer[SocketChannel] = socketChannel => {
       socketChannel.pipeline()
-        .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, delimiter))
+        .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, socketChannel.alloc().buffer().writeBytes(delimiter)))
         .addLast(new ClientSendHandler(() => connect()))
     }
 
