@@ -92,7 +92,7 @@ object Factory {
     val serverBootstrap = createServerBootstrap().childHandler(new ClientReceiveHandler)
     () => {
       connect()
-      serverBootstrap.bind(clientConfig.getIntValue("port"))
+      serverBootstrap.bind(clientConfig.getIntValue("localPort"))
     }
   }
 

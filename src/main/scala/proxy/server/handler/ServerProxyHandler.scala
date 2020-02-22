@@ -19,12 +19,12 @@ class ServerProxyHandler(getBootstrap: () => Bootstrap) extends SimpleChannelInb
 
   override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = childChannelHandlerOption.foreach(childChannelHandler => {
     val messageType = msg.getByte(0)
-    val remoteChannelId = msg.getCharSequence(1, 9, StandardCharsets.UTF_8).toString
+    val remoteChannelId = msg.getCharSequence(1, 8, StandardCharsets.UTF_8).toString
 
     messageType match {
       case Message.connect => childChannelHandler.connect(remoteChannelId)
       case Message.disconnect => childChannelHandler.activeDisconnect(remoteChannelId)
-      case Message.data => childChannelHandler.writeToChild(remoteChannelId, msg.slice(9, msg.capacity()))
+      case Message.data => childChannelHandler.writeToChild(remoteChannelId, msg.slice(9, msg.capacity() - 9))
     }
   })
 
