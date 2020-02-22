@@ -32,7 +32,10 @@ class ClientSendHandler(connect: () => Unit) extends SimpleChannelInboundHandler
         ClientCacheFactory.channelMap.remove(channelId)
         channel.close
 
-      case Message.data => channel.writeAndFlush(msg.slice(9, msg.capacity() - 9))
+      case Message.data =>
+        val buf = ctx.alloc().buffer(msg.capacity() - 9)
+        msg.getBytes(9, buf)
+        channel.writeAndFlush(buf)
     }
   }
 

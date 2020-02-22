@@ -24,7 +24,10 @@ class ServerProxyHandler(getBootstrap: () => Bootstrap) extends SimpleChannelInb
     messageType match {
       case Message.connect => childChannelHandler.connect(remoteChannelId)
       case Message.disconnect => childChannelHandler.activeDisconnect(remoteChannelId)
-      case Message.data => childChannelHandler.writeToChild(remoteChannelId, msg.slice(9, msg.capacity() - 9))
+      case Message.data =>
+        val buf = ctx.alloc().buffer(msg.capacity() - 9)
+        msg.getBytes(9, buf)
+        childChannelHandler.writeToChild(remoteChannelId, buf)
     }
   })
 
