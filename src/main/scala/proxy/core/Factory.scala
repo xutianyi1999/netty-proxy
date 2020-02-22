@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets
 
 import com.alibaba.fastjson.{JSON, JSONObject}
 import io.netty.bootstrap.{Bootstrap, ServerBootstrap}
-import io.netty.channel.epoll.{EpollChannelOption, EpollEventLoopGroup, EpollServerSocketChannel, EpollSocketChannel}
+import io.netty.channel.epoll.{EpollEventLoopGroup, EpollServerSocketChannel, EpollSocketChannel}
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.{NioServerSocketChannel, NioSocketChannel}
@@ -97,13 +97,9 @@ object Factory {
 
   private def createBootstrap(): Bootstrap = new Bootstrap().group(config._2)
     .channel(config._4)
-    .option[Integer](EpollChannelOption.TCP_FASTOPEN, 256)
     .option[java.lang.Boolean](ChannelOption.SO_KEEPALIVE, true)
-    .option[java.lang.Boolean](EpollChannelOption.TCP_QUICKACK, true)
 
   private def createServerBootstrap(): ServerBootstrap = new ServerBootstrap().group(config._1, config._2)
     .channel(config._3)
-    .option[Integer](EpollChannelOption.TCP_FASTOPEN, 256)
     .childOption[java.lang.Boolean](ChannelOption.SO_KEEPALIVE, true)
-    .childOption[java.lang.Boolean](EpollChannelOption.TCP_QUICKACK, true)
 }
