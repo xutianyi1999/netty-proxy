@@ -17,19 +17,23 @@ class ServerProxyHandler(getBootstrap: () => Bootstrap) extends SimpleChannelInb
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = childChannelHandlerOption.foreach(_.disconnectAll())
 
-  override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = childChannelHandlerOption.foreach(childChannelHandler => {
-    val messageType = msg.getByte(0)
-    val remoteChannelId = msg.getCharSequence(1, 8, StandardCharsets.UTF_8).toString
+  override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = {
+    val capacity = msg.capacity()
 
-    messageType match {
-      case Message.connect => childChannelHandler.connect(remoteChannelId)
-      case Message.disconnect => childChannelHandler.activeDisconnect(remoteChannelId)
-      case Message.data =>
-        val buf = ctx.alloc().buffer(msg.capacity() - 9)
-        msg.getBytes(9, buf)
-        childChannelHandler.writeToChild(remoteChannelId, buf)
-    }
-  })
+    if (capacity > 0) childChannelHandlerOption.foreach(childChannelHandler => {
+      val messageType = msg.getByte(0)
+      val remoteChannelId = msg.getCharSequence(1, 8, StandardCharsets.UTF_8).toString
+
+      messageType match {
+        case Message.connect => childChannelHandler.connect(remoteChannelId)
+        case Message.disconnect => childChannelHandler.activeDisconnect(remoteChannelId)
+        case Message.data =>
+          val buf = ctx.alloc().buffer(capacity - 9)
+          msg.getBytes(9, buf)
+          childChannelHandler.writeToChild(remoteChannelId, buf)
+      }
+    })
+  }
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = cause.printStackTrace()
 }

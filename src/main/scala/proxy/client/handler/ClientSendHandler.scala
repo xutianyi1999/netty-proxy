@@ -22,20 +22,24 @@ class ClientSendHandler(connect: () => Unit) extends SimpleChannelInboundHandler
   }
 
   override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = {
-    val messageType = msg.getByte(0)
-    val channelId = msg.getCharSequence(1, 8, StandardCharsets.UTF_8).toString
+    val capacity = msg.capacity()
 
-    val channel = ClientCacheFactory.channelMap.get(channelId)
+    if (capacity > 0) {
+      val messageType = msg.getByte(0)
+      val channelId = msg.getCharSequence(1, 8, StandardCharsets.UTF_8).toString
 
-    if (channel != null) messageType match {
-      case Message.disconnect =>
-        ClientCacheFactory.channelMap.remove(channelId)
-        channel.close
+      val channel = ClientCacheFactory.channelMap.get(channelId)
 
-      case Message.data =>
-        val buf = ctx.alloc().buffer(msg.capacity() - 9)
-        msg.getBytes(9, buf)
-        channel.writeAndFlush(buf)
+      if (channel != null) messageType match {
+        case Message.disconnect =>
+          ClientCacheFactory.channelMap.remove(channelId)
+          channel.close
+
+        case Message.data =>
+          val buf = ctx.alloc().buffer(capacity - 9)
+          msg.getBytes(9, buf)
+          channel.writeAndFlush(buf)
+      }
     }
   }
 
