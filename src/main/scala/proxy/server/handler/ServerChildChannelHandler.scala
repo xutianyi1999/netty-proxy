@@ -4,7 +4,8 @@ import java.nio.charset.StandardCharsets
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
-import io.netty.channel.Channel
+import io.netty.channel.{Channel, ChannelFuture}
+import io.netty.util.concurrent.GenericFutureListener
 import proxy.Message
 import proxy.core.Factory
 import proxy.server.ServerCacheFactory
@@ -15,16 +16,30 @@ class ServerChildChannelHandler(bootstrap: Bootstrap, mainChannel: Channel) {
   private val tcpClient: Bootstrap = bootstrap.handler(new ServerChildProxyHandler(writeToMain, passiveDisconnect))
 
   def connect(remoteChannelId: String): Unit = {
-    val channel = tcpClient.connect().sync().channel()
+    val channelFuture = tcpClient.connect()
+    val channel = channelFuture.channel()
+
     cacheFactory.addChannel(remoteChannelId, channel)
+
+    val connectListener: GenericFutureListener[ChannelFuture] = future => if (future.isSuccess) {
+      future.channel().flush()
+    } else {
+      cacheFactory.removeAndClose(remoteChannelId, channel.id().asShortText)
+    }
+    channelFuture.addListener(connectListener)
   }
 
   def disconnectAll(): Unit = cacheFactory.closeAll()
 
   def activeDisconnect(remoteChannelId: String): Unit = cacheFactory.removeByRemoteChannelId(remoteChannelId)
 
-  def writeToChild(remoteChannelId: String, data: ByteBuf): Unit = cacheFactory.getChannelByRemoteChannelId(remoteChannelId)
-    .foreach(_.writeAndFlush(data))
+  def writeToChild(remoteChannelId: String, data: ByteBuf): Unit = {
+    cacheFactory.getChannelByRemoteChannelId(remoteChannelId).foreach(channel => if (channel.isActive) {
+      channel.writeAndFlush(data)
+    } else {
+      channel.write(data)
+    })
+  }
 
   private def writeToMain(localChannelId: String, data: ByteBuf): Unit = cacheFactory.getRemoteChannelId(localChannelId)
     .foreach(remoteChannelId => {
