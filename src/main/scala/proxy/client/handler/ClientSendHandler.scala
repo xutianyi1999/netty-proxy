@@ -2,11 +2,11 @@ package proxy.client.handler
 
 import java.nio.charset.StandardCharsets
 
-import io.netty.buffer.ByteBuf
+import io.netty.buffer.{ByteBuf, ByteBufUtil}
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
-import proxy.Message
 import proxy.client.ClientCacheFactory
+import proxy.core.{Factory, Message}
 
 @Sharable
 class ClientSendHandler(connect: () => Unit) extends SimpleChannelInboundHandler[ByteBuf] {
@@ -36,8 +36,8 @@ class ClientSendHandler(connect: () => Unit) extends SimpleChannelInboundHandler
           channel.close
 
         case Message.data =>
-          val buf = ctx.alloc().buffer(capacity - 9)
-          msg.getBytes(9, buf)
+          val data = Factory.cipher.decrypt(ByteBufUtil.getBytes(msg, 9, capacity - 9))
+          val buf = ctx.alloc().buffer().writeBytes(data)
           channel.writeAndFlush(buf)
       }
     }

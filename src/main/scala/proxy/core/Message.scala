@@ -1,4 +1,4 @@
-package proxy
+package proxy.core
 
 object Message {
 

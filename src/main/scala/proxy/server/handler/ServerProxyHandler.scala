@@ -3,9 +3,9 @@ package proxy.server.handler
 import java.nio.charset.StandardCharsets
 
 import io.netty.bootstrap.Bootstrap
-import io.netty.buffer.ByteBuf
+import io.netty.buffer.{ByteBuf, ByteBufUtil}
 import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
-import proxy.Message
+import proxy.core.{Factory, Message}
 
 class ServerProxyHandler(getBootstrap: () => Bootstrap) extends SimpleChannelInboundHandler[ByteBuf] {
 
@@ -28,8 +28,8 @@ class ServerProxyHandler(getBootstrap: () => Bootstrap) extends SimpleChannelInb
         case Message.connect => childChannelHandler.connect(remoteChannelId)
         case Message.disconnect => childChannelHandler.activeDisconnect(remoteChannelId)
         case Message.data =>
-          val buf = ctx.alloc().buffer(capacity - 9)
-          msg.getBytes(9, buf)
+          val data = Factory.cipher.decrypt(ByteBufUtil.getBytes(msg, 9, capacity - 9))
+          val buf = ctx.alloc().buffer().writeBytes(data)
           childChannelHandler.writeToChild(remoteChannelId, buf)
       }
     })

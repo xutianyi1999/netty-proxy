@@ -25,6 +25,8 @@ object Factory {
     in => JSON.parseObject[JSONObject](in, StandardCharsets.UTF_8, classOf[JSONObject])
   }.get
 
+  val cipher = new RC4(jsonConfig.getString("key"))
+
   private val config = if (isLinux)
     (
       new EpollEventLoopGroup(),

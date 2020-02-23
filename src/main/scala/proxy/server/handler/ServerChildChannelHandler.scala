@@ -6,8 +6,7 @@ import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.channel.{Channel, ChannelFuture}
 import io.netty.util.concurrent.GenericFutureListener
-import proxy.Message
-import proxy.core.Factory
+import proxy.core.{Factory, Message}
 import proxy.server.ServerCacheFactory
 
 class ServerChildChannelHandler(bootstrap: Bootstrap, mainChannel: Channel) {
@@ -51,7 +50,7 @@ class ServerChildChannelHandler(bootstrap: Bootstrap, mainChannel: Channel) {
         .writeCharSequence(remoteChannelId, StandardCharsets.UTF_8)
 
       message
-        .writeBytes(data)
+        .writeBytes(Factory.cipher.encrypt(data))
         .writeBytes(Factory.delimiter)
 
       mainChannel.writeAndFlush(message)

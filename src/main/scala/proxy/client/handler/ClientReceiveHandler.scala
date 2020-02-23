@@ -5,9 +5,8 @@ import java.nio.charset.StandardCharsets
 import io.netty.buffer.ByteBuf
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
-import proxy.Message
 import proxy.client.ClientCacheFactory
-import proxy.core.Factory
+import proxy.core.{Factory, Message}
 
 @Sharable
 class ClientReceiveHandler extends SimpleChannelInboundHandler[ByteBuf] {
@@ -38,7 +37,7 @@ class ClientReceiveHandler extends SimpleChannelInboundHandler[ByteBuf] {
       .writeCharSequence(ctx.channel().id().asShortText(), StandardCharsets.UTF_8)
 
     message
-      .writeBytes(msg)
+      .writeBytes(Factory.cipher.encrypt(msg))
       .writeBytes(Factory.delimiter)
 
     _.writeAndFlush(message)
