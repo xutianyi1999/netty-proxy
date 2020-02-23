@@ -57,16 +57,16 @@ class ServerChildChannelHandler(bootstrap: Bootstrap, mainChannel: Channel) {
     })
 
   private def passiveDisconnect(localChannelId: String): Unit = cacheFactory.getRemoteChannelId(localChannelId)
-    .foreach {
+    .foreach(remoteChannelId => {
       val disconnectMessage = mainChannel.alloc().buffer()
 
       disconnectMessage
         .writeByte(Message.disconnect)
-        .writeCharSequence(_, StandardCharsets.UTF_8)
+        .writeCharSequence(remoteChannelId, StandardCharsets.UTF_8)
 
       disconnectMessage.writeBytes(Factory.delimiter)
 
       mainChannel.writeAndFlush(disconnectMessage)
-      cacheFactory.removeAndClose(_, localChannelId)
-    }
+      cacheFactory.removeAndClose(remoteChannelId, localChannelId)
+    })
 }
