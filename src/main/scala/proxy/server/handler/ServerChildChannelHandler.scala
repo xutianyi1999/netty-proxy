@@ -25,6 +25,7 @@ class ServerChildChannelHandler(bootstrap: Bootstrap, mainChannel: Channel) {
       future.channel().flush()
     } else {
       cacheFactory.removeAndClose(remoteChannelId, channel.id().asShortText)
+      future.cause().printStackTrace()
     }
     channelFuture.addListener(connectListener)
   }
