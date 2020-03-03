@@ -18,8 +18,8 @@ class RC4(password: String) {
   private val rc4Encrypt = Cipher.getInstance("RC4")
   rc4Encrypt.init(Cipher.ENCRYPT_MODE, key)
 
-  private val rctDecrypt = Cipher.getInstance("RC4")
-  rctDecrypt.init(Cipher.DECRYPT_MODE, key)
+  private val rc4Decrypt = Cipher.getInstance("RC4")
+  rc4Decrypt.init(Cipher.DECRYPT_MODE, key)
 
   def encrypt(data: ByteBuf): Array[Byte] = encrypt(ByteBufUtil.getBytes(data))
 
@@ -27,5 +27,5 @@ class RC4(password: String) {
 
   def decrypt(data: ByteBuf): Array[Byte] = decrypt(ByteBufUtil.getBytes(data))
 
-  def decrypt(data: Array[Byte]): Array[Byte] = rctDecrypt.doFinal(data)
+  def decrypt(data: Array[Byte]): Array[Byte] = rc4Decrypt.doFinal(data)
 }
