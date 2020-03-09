@@ -1,11 +1,7 @@
 package proxy
 
-import proxy.core.Factory
-
 object Launcher extends App {
-  val startF = args(0) match {
-    case "server" => Factory.createServer()
-    case "client" => Factory.createClient()
-  }
-  startF()
+  val f1 = (a: Int) => a + 1
+  val f2 = f1.compose((a: Int) => a * 2)
+  println(f2(10))
 }

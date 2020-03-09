@@ -1,9 +1,8 @@
-package proxy.core
+package proxy.common
 
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
 
-import io.netty.buffer.{ByteBuf, ByteBufUtil}
 import javax.crypto.{Cipher, KeyGenerator}
 
 class RC4(password: String) {
@@ -21,11 +20,7 @@ class RC4(password: String) {
   private val rc4Decrypt = Cipher.getInstance("RC4")
   rc4Decrypt.init(Cipher.DECRYPT_MODE, key)
 
-  def encrypt(data: ByteBuf): Array[Byte] = encrypt(ByteBufUtil.getBytes(data))
-
   def encrypt(data: Array[Byte]): Array[Byte] = rc4Encrypt.doFinal(data)
-
-  def decrypt(data: ByteBuf): Array[Byte] = decrypt(ByteBufUtil.getBytes(data))
 
   def decrypt(data: Array[Byte]): Array[Byte] = rc4Decrypt.doFinal(data)
 }
