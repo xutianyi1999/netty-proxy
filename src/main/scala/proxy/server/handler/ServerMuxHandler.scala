@@ -1,9 +1,8 @@
 package proxy.server.handler
 
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentHashMap
 
-import io.netty.buffer.{ByteBuf, ByteBufUtil}
+import io.netty.buffer.ByteBuf
 import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
 import proxy.common.Convert._
 import proxy.common.{Message, RC4}
@@ -17,15 +16,14 @@ class ServerMuxHandler(rc4: RC4) extends SimpleChannelInboundHandler[ByteBuf] {
 
   override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = {
     val allocator = ctx.alloc()
-    val capacity = msg.capacity()
 
-    val messageType = msg.getByte(0)
-    implicit val remoteChannelId: String = msg.getCharSequence(1, 8, StandardCharsets.UTF_8).toString
+    val messageType = Message.getMessageType(msg)
+    implicit val remoteChannelId: String = Message.getChannelId(msg)
 
     messageType match {
       case Message.connect =>
-        val write = rc4.encryptMessage { ciphertext =>
-          val data = Message.dataMessageTemplate(allocator.buffer(), ciphertext)
+        val write: ByteBuf => Unit = byteBuf => {
+          val data = Message.dataMessageTemplate(allocator.buffer(), rc4.encrypt(byteBuf))
           ctx.writeAndFlush(data)
         }
 
@@ -34,20 +32,21 @@ class ServerMuxHandler(rc4: RC4) extends SimpleChannelInboundHandler[ByteBuf] {
           ctx.writeAndFlush(data)
         }
 
-        val childChannel = new ServerChildChannel(write, () => {
+        val disconnectListener = () => {
           map.remove(remoteChannelId)
           sendDisconnectMessage()
-        })
+        }
 
+        val childChannel = new ServerChildChannel(write, disconnectListener)
         map.put(remoteChannelId, childChannel)
 
       case Message.disconnect =>
         val childChannel = map.remove(remoteChannelId)
         if (childChannel != null) childChannel.close()
 
-      case Message.data => map.ifPresent(remoteChannelId) { childChannel =>
-        val data = rc4.decrypt(ByteBufUtil.getBytes(msg, 9, capacity - 9))
-        childChannel.writeToLocal(allocator.buffer().writeBytes(data))
+      case Message.data => map.getOption(remoteChannelId).foreach {
+        val data = rc4.decrypt(Message.getData(msg))
+        _.writeToLocal(allocator.buffer().writeBytes(data))
       }
     }
   }

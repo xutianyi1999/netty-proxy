@@ -1,26 +1,21 @@
 package proxy.common
 
-import io.netty.buffer.{ByteBuf, ByteBufUtil}
+import io.netty.buffer.{ByteBuf, ByteBufUtil, Unpooled}
+import io.netty.channel.{Channel, ChannelHandlerContext}
 
 object Convert {
 
-  implicit class MessageConvert(rc4: RC4) {
+  implicit def channelToChannelId(channel: Channel): String = channel.id().asShortText()
 
-    def encryptMessage(f: Array[Byte] => Unit): ByteBuf => Unit = {
-      plaintext => f(rc4.encrypt(ByteBufUtil.getBytes(plaintext)))
-    }
+  implicit def channelToChannelId(ctx: ChannelHandlerContext): String = ctx.channel()
 
-    def decryptMessage(ciphertext: ByteBuf): Array[Byte] = {
-      rc4.decrypt(ByteBufUtil.getBytes(ciphertext))
-    }
-  }
+  implicit def byteBufToByteArray(byteBuf: ByteBuf): Array[Byte] = ByteBufUtil.getBytes(byteBuf)
+
+  implicit def byteArrayToByteBuf(bytes: Array[Byte]): ByteBuf = Unpooled.wrappedBuffer(bytes)
 
   implicit class MapConvert[K, V](map: java.util.Map[K, V]) {
 
-    def ifPresent(key: K)(f: V => Unit): Unit = {
-      val v = map.get(key)
-      if (v != null) f(v)
-    }
+    def getOption(key: K): Option[V] = Option(map.get(key))
   }
 
 }

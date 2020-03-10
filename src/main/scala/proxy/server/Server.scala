@@ -6,6 +6,7 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.DelimiterBasedFrameDecoder
 import io.netty.handler.codec.socksx.v5.{Socks5CommandRequestDecoder, Socks5InitialRequestDecoder, Socks5ServerEncoder}
 import proxy.Factory
+import proxy.common.Convert.byteArrayToByteBuf
 import proxy.common.{Commons, Message, RC4}
 import proxy.server.handler.ServerMuxHandler
 import proxy.server.handler.socks5.{Socks5CommandRequestHandler, Socks5InitialRequestHandler}
@@ -26,7 +27,7 @@ object Server {
       .sync()
 
     val tcpInitializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
-      .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, socketChannel.alloc().buffer().writeBytes(Message.delimiter)))
+      .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, Message.delimiter))
       .addLast(new ServerMuxHandler(new RC4(key))) // 多路处理器
 
     Factory.createTcpServerBootstrap
