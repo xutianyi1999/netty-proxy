@@ -7,7 +7,6 @@ import io.netty.channel.local.{LocalChannel, LocalServerChannel}
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.{NioServerSocketChannel, NioSocketChannel}
 import io.netty.channel.socket.{ServerSocketChannel, SocketChannel}
-import io.netty.handler.logging.{LogLevel, LoggingHandler}
 
 object Factory {
   val isLinux: Boolean = System.getProperty("os.name").contains("Linux")
@@ -31,7 +30,6 @@ object Factory {
   def createTcpServerBootstrap: ServerBootstrap = new ServerBootstrap()
     .group(bossGroup, workerGroup)
     .channel(serverSocketChannel)
-    .handler(new LoggingHandler(LogLevel.INFO))
 
   def createLocalBootstrap: Bootstrap = new Bootstrap()
     .group(workerGroup)

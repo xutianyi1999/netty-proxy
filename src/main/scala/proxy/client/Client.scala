@@ -87,8 +87,8 @@ object Client {
       }
 
       socketChannel.pipeline()
-        .addLast(new ByteArrayEncoder)
         .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, Message.delimiter))
+        .addLast(new ByteArrayEncoder)
         .addLast(new ClientMuxHandler(rc4, disconnectListener, write, close))
     }
 
