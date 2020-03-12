@@ -15,7 +15,6 @@ object Server {
 
   def start(listen: Int, key: String): Unit = {
     val localInitializer: ChannelInitializer[LocalChannel] = localChannel => localChannel.pipeline()
-      .addLast(new ByteArrayEncoder)
       .addLast(Socks5ServerEncoder.DEFAULT)
       .addLast(new Socks5InitialRequestDecoder)
       .addLast(Socks5InitialRequestHandler)
@@ -31,6 +30,7 @@ object Server {
 
     val tcpInitializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
       .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, Message.delimiter))
+      .addLast(new ByteArrayEncoder)
       .addLast(new ServerMuxHandler(new RC4(key))) // 多路处理器
 
     Factory.createTcpServerBootstrap

@@ -39,7 +39,7 @@ object Client {
     }
 
     Factory.createTcpServerBootstrap
-      .handler(initializer)
+      .childHandler(initializer)
       .bind(listen)
       .sync()
   }

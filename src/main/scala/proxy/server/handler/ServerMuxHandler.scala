@@ -25,7 +25,7 @@ class ServerMuxHandler(rc4: RC4) extends SimpleChannelInboundHandler[ByteBuf] {
     messageType match {
       case Message.connect =>
         val write: ByteBuf => Unit = byteBuf => {
-          val data = Message.dataMessageTemplate(rc4.encrypt(byteBuf))
+          val data = Message.dataMessageTemplate(rc4 encrypt byteBuf)
           ctx.writeAndFlush(data)
         }
 
