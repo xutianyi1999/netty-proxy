@@ -4,37 +4,34 @@ import java.util.concurrent.ConcurrentHashMap
 
 import io.netty.buffer.ByteBuf
 import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
-import proxy.common.Convert._
 import proxy.common.{Message, RC4}
 import proxy.server.ServerChildChannel
 
+import scala.collection.JavaConverters._
+import scala.collection.mutable
+
 class ServerMuxHandler(rc4: RC4) extends SimpleChannelInboundHandler[ByteBuf] {
 
-  private val map: java.util.Map[String, ServerChildChannel] = new ConcurrentHashMap
+  private val map: mutable.Map[String, ServerChildChannel] = new ConcurrentHashMap[String, ServerChildChannel].asScala
 
-  override def channelInactive(ctx: ChannelHandlerContext): Unit = map.values().forEach(_.close())
+  override def channelInactive(ctx: ChannelHandlerContext): Unit = map.values.foreach(_.close())
 
   override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = {
-    val allocator = ctx.alloc()
+    import proxy.common.Convert._
 
-    val messageType = Message.getMessageType(msg)
-    implicit val remoteChannelId: String = Message.getChannelId(msg)
+    val messageType = msg.getMessageType
+    implicit val remoteChannelId: String = msg.getChannelId
 
     messageType match {
       case Message.connect =>
         val write: ByteBuf => Unit = byteBuf => {
-          val data = Message.dataMessageTemplate(allocator.buffer(), rc4.encrypt(byteBuf))
+          val data = Message.dataMessageTemplate(rc4.encrypt(byteBuf))
           ctx.writeAndFlush(data)
         }
 
-        def sendDisconnectMessage(): Unit = {
-          val data = Message.disconnectMessageTemplate(allocator.buffer())
-          ctx.writeAndFlush(data)
-        }
-
-        val disconnectListener = () => {
+        val disconnectListener: () => Unit = () => {
           map.remove(remoteChannelId)
-          sendDisconnectMessage()
+          ctx.writeAndFlush(Message.disconnectMessageTemplate)
         }
 
         val childChannel = new ServerChildChannel(write, disconnectListener)
@@ -42,11 +39,10 @@ class ServerMuxHandler(rc4: RC4) extends SimpleChannelInboundHandler[ByteBuf] {
 
       case Message.disconnect =>
         val childChannel = map.remove(remoteChannelId)
-        if (childChannel != null) childChannel.close()
+        childChannel.foreach(_.close())
 
-      case Message.data => map.getOption(remoteChannelId).foreach {
-        val data = rc4.decrypt(Message.getData(msg))
-        _.writeToLocal(allocator.buffer().writeBytes(data))
+      case Message.data => map.get(remoteChannelId).foreach {
+        _.writeToLocal(rc4 decrypt msg.getData)
       }
     }
   }

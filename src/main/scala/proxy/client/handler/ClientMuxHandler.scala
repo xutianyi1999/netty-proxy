@@ -3,28 +3,28 @@ package proxy.client.handler
 import io.netty.buffer.ByteBuf
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
-import proxy.common.{Message, RC4}
+import proxy.common._
 
 @Sharable
 class ClientMuxHandler(rc4: RC4,
                        disconnectListener: () => Unit,
                        write: (String, => Array[Byte]) => Unit,
-                       close: String => Unit) extends SimpleChannelInboundHandler[ByteBuf] {
+                       close: CloseInfo => Unit) extends SimpleChannelInboundHandler[ByteBuf] {
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = {
-    close("all")
+    close(CloseAll)
     disconnectListener()
   }
 
   override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = {
-    val messageType = Message.getMessageType(msg)
-    val channelId = Message.getChannelId(msg)
+    import proxy.common.Convert.ByteBufConvert
+
+    val messageType = msg.getMessageType
+    val channelId = msg.getChannelId
 
     messageType match {
-      case Message.disconnect => close(channelId)
-      case Message.data =>
-        lazy val data = rc4.decrypt(Message.getData(msg))
-        write(channelId, data)
+      case Message.disconnect => close(CloseOne(channelId))
+      case Message.data => write(channelId, rc4 decrypt msg.getData)
     }
   }
 

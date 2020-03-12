@@ -32,7 +32,7 @@ class ServerChildChannel(write: ByteBuf => Unit, closeListener: () => Unit) {
 
   channelFuture.addListener(connectListener)
 
-  def writeToLocal(msg: ByteBuf): Unit = if (channel.isActive) {
+  def writeToLocal(msg: Array[Byte]): Unit = if (channel.isActive) {
     channel.writeAndFlush(msg)
   } else {
     channel.write(msg)

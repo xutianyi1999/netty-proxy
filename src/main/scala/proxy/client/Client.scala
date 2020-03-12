@@ -9,7 +9,7 @@ import io.netty.handler.codec.bytes.ByteArrayEncoder
 import proxy.Factory
 import proxy.client.handler.{ClientMuxHandler, ClientProxyHandler}
 import proxy.common.Convert._
-import proxy.common.{Message, RC4}
+import proxy.common._
 
 import scala.util.{Failure, Success, Try}
 
@@ -21,6 +21,14 @@ object Client {
     startClientProxy(listen, rc4)
   }
 
+  def mapRemove(channelId: String): Option[Channel] = ClientCatch.map.remove(channelId)
+
+  /**
+   * 启动客户端代理服务器
+   *
+   * @param listen 监听端口
+   * @param rc4    rc4加密
+   */
   private def startClientProxy(listen: Int, rc4: RC4): Unit = {
     val putChannel: (String, Channel) => Unit = ClientCatch.map.put
 
@@ -36,31 +44,50 @@ object Client {
       .sync()
   }
 
+  /**
+   * 客户端远程连接
+   *
+   * @param host 服务器ip
+   * @param port 服务器端口
+   * @param rc4  rc4加密
+   */
   private def startClientMux(host: String, port: Int, rc4: RC4): Unit = {
     val address = new InetSocketAddress(host, port)
 
     val write: (String, => Array[Byte]) => Unit = (channelId, data) => {
-      ClientCatch.map.getOption(channelId).foreach(_.writeAndFlush(data))
+      ClientCatch.map.get(channelId).foreach(_.writeAndFlush(data))
     }
 
-    val close: String => Unit = {
-      case "all" =>
-        val values = ClientCatch.map.values()
+    val close: CloseInfo => Unit = {
+      case CloseAll =>
+        val values = ClientCatch.map.values
         ClientCatch.map.clear()
-        values.forEach(_.close(): Unit)
+        values.foreach(_.close())
 
-      case channelId: String => mapRemove(channelId).foreach(_.close())
+      case CloseOne(channelId) => mapRemove(channelId).foreach(_.close())
+    }
+
+    def connect(t: Try[Channel]): Unit = {
+      @scala.annotation.tailrec
+      def re(): Channel = t match {
+        case Failure(exception) => exception.printStackTrace(); re()
+        case Success(channel) => channel
+      }
+
+      ClientCatch.remoteChannelOption = Option(re())
     }
 
     val clientInitializer: ChannelInitializer[SocketChannel] = socketChannel => {
       val disconnectListener = () => {
         ClientCatch.remoteChannelOption = Option.empty
-        ClientCatch.remoteChannelOption = Option {
-          connect(() => socketChannel.connect(address).sync().channel())
+
+        connect {
+          Try(socketChannel.connect(address).sync().channel())
         }
       }
 
       socketChannel.pipeline()
+        .addLast(new ByteArrayEncoder)
         .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, Message.delimiter))
         .addLast(new ClientMuxHandler(rc4, disconnectListener, write, close))
     }
@@ -68,18 +95,8 @@ object Client {
     val bootstrap = Factory.createTcpBootstrap
       .handler(clientInitializer)
 
-    ClientCatch.remoteChannelOption = Option {
-      connect(() => bootstrap.connect(host, port).sync().channel())
+    connect {
+      Try(bootstrap.connect(address).sync().channel())
     }
-  }
-
-  def mapRemove(channelId: String): Option[Channel] = Option(ClientCatch.map.remove(channelId))
-
-  @scala.annotation.tailrec
-  def connect(f: () => Channel): Channel = Try(f()) match {
-    case Failure(exception) =>
-      exception.printStackTrace()
-      connect(f)
-    case Success(channel) => channel
   }
 }

@@ -10,33 +10,28 @@ import proxy.common.{Message, RC4}
 @Sharable
 class ClientProxyHandler(rc4: RC4,
                          connectListener: (String, Channel) => Unit,
-                         disconnectListener: String => Unit) extends SimpleChannelInboundHandler[ByteBuf] {
+                         disconnectListener: String => Option[Channel]) extends SimpleChannelInboundHandler[ByteBuf] {
 
-  override def channelActive(ctx: ChannelHandlerContext): Unit = {
-    implicit val channelId: String = ctx
-    connectListener(channelId, ctx.channel())
+  override def channelActive(ctx: ChannelHandlerContext): Unit = ClientCatch.remoteChannelOption match {
+    case Some(channel) =>
+      implicit val channelId: String = ctx
 
-    ClientCatch.remoteChannelOption.foreach {
-      val data = Message.connectMessageTemplate(ctx.alloc().buffer())
-      _.writeAndFlush(data)
-    }
+      connectListener(channelId, ctx.channel())
+      channel.writeAndFlush(Message.connectMessageTemplate)
+
+    case None => ctx.close()
   }
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = {
     implicit val channelId: String = ctx
 
-    if (ClientCatch.map.containsKey(channelId)) {
-      disconnectListener(channelId)
-
-      ClientCatch.remoteChannelOption.foreach {
-        val data = Message.disconnectMessageTemplate(ctx.alloc().buffer())
-        _.writeAndFlush(data)
-      }
+    if (disconnectListener(channelId).isDefined) ClientCatch.remoteChannelOption.foreach {
+      _.writeAndFlush(Message.disconnectMessageTemplate)
     }
   }
 
   override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = ClientCatch.remoteChannelOption.foreach {
-    val data = Message.dataMessageTemplate(ctx.alloc().buffer(), msg)(ctx)
+    val data = Message.dataMessageTemplate(rc4 encrypt msg)(ctx)
     _.writeAndFlush(data)
   }
 

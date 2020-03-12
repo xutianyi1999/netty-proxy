@@ -9,9 +9,10 @@ import proxy.Factory
 @Sharable
 object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSocks5CommandRequest] {
 
-  override def channelRead0(ctx: ChannelHandlerContext, msg: DefaultSocks5CommandRequest): Unit = {
+  override def channelRead0(ctx: ChannelHandlerContext, msg: DefaultSocks5CommandRequest): Unit =
     if (msg.`type`().equals(Socks5CommandType.CONNECT)) {
       val connectListener: GenericFutureListener[ChannelFuture] = future => {
+
         val commandResponse = if (future.isSuccess) {
           ctx.pipeline().addLast(getChannelInbound(future.channel()))
           new DefaultSocks5CommandResponse(Socks5CommandStatus.SUCCESS, Socks5AddressType.IPv4)
@@ -27,7 +28,6 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
         .connect(msg.dstAddr(), msg.dstPort())
         .addListener(connectListener)
     }
-  }
 
   def getChannelInbound(dst: Channel): ChannelInboundHandlerAdapter = new ChannelInboundHandlerAdapter {
     override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
