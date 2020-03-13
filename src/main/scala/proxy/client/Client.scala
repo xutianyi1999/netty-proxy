@@ -1,6 +1,7 @@
 package proxy.client
 
 import java.net.InetSocketAddress
+import java.util.concurrent.TimeUnit
 
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.{Channel, ChannelInitializer}
@@ -14,7 +15,6 @@ import proxy.common.handler.{RC4Decrypt, RC4Encrypt}
 import scala.util.{Failure, Success, Try}
 
 object Client {
-
   def start(listen: Int, host: String, port: Int, key: String): Unit = {
     startClientMux(host, port, new RC4(key))
     startClientProxy(listen)
@@ -40,6 +40,8 @@ object Client {
       .childHandler(initializer)
       .bind(listen)
       .sync()
+
+    Commons.log.info(s"Listen: $listen")
   }
 
   /**
@@ -64,23 +66,23 @@ object Client {
       case CloseOne(channelId) => mapRemove(channelId).foreach(_.close())
     }
 
-    def connect(t: Try[Channel]): Unit = {
-      @scala.annotation.tailrec
-      def re(): Channel = t match {
-        case Failure(exception) => exception.printStackTrace(); re()
-        case Success(channel) => channel
+    def connect(channel: => Channel): Unit = Factory.delay.curried { () =>
+      Try(channel) match {
+        case Failure(exception) => exception.printStackTrace(); connect(channel)
+        case Success(v) =>
+          ClientCatch.remoteChannelOption = Option(v)
+          Commons.log.info("Server connected")
       }
+    }(3)(TimeUnit.SECONDS)
 
-      ClientCatch.remoteChannelOption = Option(re())
-    }
+    val bootstrap = Factory.createTcpBootstrap
 
     val clientInitializer: ChannelInitializer[SocketChannel] = socketChannel => {
       val disconnectListener = () => {
-        ClientCatch.remoteChannelOption = Option.empty
+        Commons.log.severe("disconnected")
 
-        connect {
-          Try(socketChannel.connect(address).sync().channel())
-        }
+        ClientCatch.remoteChannelOption = Option.empty
+        connect(bootstrap.connect(address).sync().channel())
       }
 
       import proxy.common.Convert.ByteBufConvert.byteArrayToByteBuf
@@ -94,11 +96,7 @@ object Client {
         .addLast(new ClientMuxHandler(disconnectListener, write, close))
     }
 
-    val bootstrap = Factory.createTcpBootstrap
-      .handler(clientInitializer)
-
-    connect {
-      Try(bootstrap.connect(address).sync().channel())
-    }
+    bootstrap.handler(clientInitializer)
+    connect(bootstrap.connect(address).sync().channel())
   }
 }

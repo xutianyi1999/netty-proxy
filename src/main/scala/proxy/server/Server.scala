@@ -6,6 +6,7 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.DelimiterBasedFrameDecoder
 import io.netty.handler.codec.bytes.{ByteArrayDecoder, ByteArrayEncoder}
 import io.netty.handler.codec.socksx.v5.{Socks5CommandRequestDecoder, Socks5InitialRequestDecoder, Socks5ServerEncoder}
+import io.netty.handler.timeout.ReadTimeoutHandler
 import proxy.common.handler.{ByteArrayToByteBufDecoder, RC4Decrypt, RC4Encrypt}
 import proxy.common.{Commons, Message, RC4}
 import proxy.server.handler.ServerMuxHandler
@@ -33,6 +34,7 @@ object Server {
     val rc4 = new RC4(key)
 
     val tcpInitializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
+      .addLast(new ReadTimeoutHandler(60))
       .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, Message.delimiter))
       .addLast(new ByteArrayEncoder)
       .addLast(new ByteArrayDecoder)
@@ -44,5 +46,7 @@ object Server {
       .childHandler(tcpInitializer)
       .bind(listen)
       .sync()
+
+    Commons.log.info(s"Listen: $listen")
   }
 }
