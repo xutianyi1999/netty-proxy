@@ -1,6 +1,5 @@
 package proxy.client.handler
 
-import io.netty.buffer.ByteBuf
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
 import proxy.common._
@@ -8,15 +7,15 @@ import proxy.common._
 @Sharable
 class ClientMuxHandler(disconnectListener: () => Unit,
                        write: (String, => Array[Byte]) => Unit,
-                       close: CloseInfo => Unit) extends SimpleChannelInboundHandler[ByteBuf] {
+                       close: CloseInfo => Unit) extends SimpleChannelInboundHandler[Array[Byte]] {
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = {
     close(CloseAll)
     disconnectListener()
   }
 
-  override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = {
-    import proxy.common.Convert.ByteBufConvert
+  override def channelRead0(ctx: ChannelHandlerContext, msg: Array[Byte]): Unit = {
+    import proxy.common.Convert.MessageConvert
 
     val messageType = msg.getMessageType
     val channelId = msg.getChannelId

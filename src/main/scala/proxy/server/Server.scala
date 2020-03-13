@@ -28,7 +28,7 @@ object Server {
       .bind(Commons.localAddress)
       .sync()
 
-    import proxy.common.Convert.byteArrayToByteBuf
+    import proxy.common.Convert.ByteBufConvert.byteArrayToByteBuf
 
     val rc4 = new RC4(key)
 
@@ -38,7 +38,6 @@ object Server {
       .addLast(new ByteArrayDecoder)
       .addLast(new RC4Encrypt(rc4))
       .addLast(new RC4Decrypt(rc4))
-      .addLast(ByteArrayToByteBufDecoder)
       .addLast(new ServerMuxHandler) // 多路处理器
 
     Factory.createTcpServerBootstrap

@@ -8,9 +8,8 @@ import io.netty.handler.codec.DelimiterBasedFrameDecoder
 import io.netty.handler.codec.bytes.{ByteArrayDecoder, ByteArrayEncoder}
 import proxy.Factory
 import proxy.client.handler.{ClientMuxHandler, ClientProxyHandler}
-import proxy.common.Convert._
 import proxy.common._
-import proxy.common.handler.{ByteArrayToByteBufDecoder, RC4Decrypt, RC4Encrypt}
+import proxy.common.handler.{RC4Decrypt, RC4Encrypt}
 
 import scala.util.{Failure, Success, Try}
 
@@ -84,13 +83,14 @@ object Client {
         }
       }
 
+      import proxy.common.Convert.ByteBufConvert.byteArrayToByteBuf
+
       socketChannel.pipeline()
         .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, Message.delimiter))
         .addLast(new ByteArrayEncoder)
         .addLast(new ByteArrayDecoder)
         .addLast(new RC4Encrypt(rc4))
         .addLast(new RC4Decrypt(rc4))
-        .addLast(ByteArrayToByteBufDecoder)
         .addLast(new ClientMuxHandler(disconnectListener, write, close))
     }
 

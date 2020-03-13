@@ -10,14 +10,15 @@ import proxy.server.ServerChildChannel
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-class ServerMuxHandler extends SimpleChannelInboundHandler[ByteBuf] {
+class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
 
   private val map: mutable.Map[String, ServerChildChannel] = new ConcurrentHashMap[String, ServerChildChannel].asScala
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = map.values.foreach(_.close())
 
-  override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = {
-    import proxy.common.Convert._
+  override def channelRead0(ctx: ChannelHandlerContext, msg: Array[Byte]): Unit = {
+    import proxy.common.Convert.ByteBufConvert.byteBufToByteArray
+    import proxy.common.Convert.MessageConvert
 
     val messageType = msg.getMessageType
     implicit val remoteChannelId: String = msg.getChannelId

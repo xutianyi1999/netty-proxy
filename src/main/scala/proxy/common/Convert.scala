@@ -7,26 +7,30 @@ import io.netty.channel.{Channel, ChannelHandlerContext}
 
 object Convert {
 
-  implicit def channelToChannelId(channel: Channel): String = channel.id().asShortText()
+  object ByteBufConvert {
+    implicit def byteBufToByteArray(byteBuf: ByteBuf): Array[Byte] = ByteBufUtil.getBytes(byteBuf)
 
-  implicit def channelToChannelId(ctx: ChannelHandlerContext): String = ctx.channel()
+    implicit def byteArrayToByteBuf(bytes: Array[Byte]): ByteBuf = Unpooled.wrappedBuffer(bytes)
+  }
 
-  implicit def byteBufToByteArray(byteBuf: ByteBuf): Array[Byte] = ByteBufUtil.getBytes(byteBuf)
+  object ChannelIdConvert {
+    implicit def channelToChannelId(channel: Channel): String = channel.id().asShortText()
 
-  implicit def byteArrayToByteBuf(bytes: Array[Byte]): ByteBuf = Unpooled.wrappedBuffer(bytes)
+    implicit def channelToChannelId(ctx: ChannelHandlerContext): String = ctx.channel()
+  }
 
   implicit class ArrayConvert(array: Array[Byte]) {
 
     def -(str: String): Array[Byte] = array ++ str.getBytes(StandardCharsets.UTF_8)
   }
 
-  implicit class ByteBufConvert(msg: ByteBuf) {
+  implicit class MessageConvert(msg: Array[Byte]) {
 
-    def getMessageType: Byte = msg.getByte(0)
+    def getMessageType: Byte = msg(0)
 
-    def getChannelId: String = msg.getCharSequence(1, 8, StandardCharsets.UTF_8).toString
+    def getChannelId: String = new String(msg.slice(1, 9), StandardCharsets.UTF_8)
 
-    def getData: Array[Byte] = ByteBufUtil.getBytes(msg, 9, msg.capacity - 9)
+    def getData: Array[Byte] = msg.slice(9, msg.length)
   }
 
 }
