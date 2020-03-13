@@ -13,14 +13,14 @@ object Message {
   import proxy.common.Convert.ArrayConvert
 
   def connectMessageTemplate(implicit channelId: String): Array[Byte] = {
-    Array[Byte](connect) - channelId ++ delimiter
+    Array[Byte](connect) - channelId
   }
 
   def disconnectMessageTemplate(implicit channelId: String): Array[Byte] = {
-    Array[Byte](disconnect) - channelId ++ delimiter
+    Array[Byte](disconnect) - channelId
   }
 
   def dataMessageTemplate(bytes: Array[Byte])(implicit channelId: String): Array[Byte] = {
-    Array[Byte](data) - channelId ++ bytes ++ delimiter
+    Array[Byte](data) - channelId ++ bytes
   }
 }

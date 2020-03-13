@@ -14,13 +14,15 @@ class RC4(password: String) {
   keyGenerator.init(40, secureRandom)
   private val key = keyGenerator.generateKey()
 
-  private val rc4Encrypt = Cipher.getInstance("RC4")
-  rc4Encrypt.init(Cipher.ENCRYPT_MODE, key)
+  def getEncryptF: Array[Byte] => Array[Byte] = {
+    val rc4Encrypt = Cipher.getInstance("RC4")
+    rc4Encrypt.init(Cipher.ENCRYPT_MODE, key)
+    rc4Encrypt.doFinal
+  }
 
-  private val rc4Decrypt = Cipher.getInstance("RC4")
-  rc4Decrypt.init(Cipher.DECRYPT_MODE, key)
-
-  def encrypt(data: Array[Byte]): Array[Byte] = rc4Encrypt.doFinal(data)
-
-  def decrypt(data: Array[Byte]): Array[Byte] = rc4Decrypt.doFinal(data)
+  def getDecryptF: Array[Byte] => Array[Byte] = {
+    val rc4Decrypt = Cipher.getInstance("RC4")
+    rc4Decrypt.init(Cipher.DECRYPT_MODE, key)
+    rc4Decrypt.doFinal
+  }
 }

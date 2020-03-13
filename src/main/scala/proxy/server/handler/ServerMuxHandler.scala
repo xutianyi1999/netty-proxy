@@ -4,13 +4,13 @@ import java.util.concurrent.ConcurrentHashMap
 
 import io.netty.buffer.ByteBuf
 import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
-import proxy.common.{Message, RC4}
+import proxy.common.Message
 import proxy.server.ServerChildChannel
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-class ServerMuxHandler(rc4: RC4) extends SimpleChannelInboundHandler[ByteBuf] {
+class ServerMuxHandler extends SimpleChannelInboundHandler[ByteBuf] {
 
   private val map: mutable.Map[String, ServerChildChannel] = new ConcurrentHashMap[String, ServerChildChannel].asScala
 
@@ -25,7 +25,7 @@ class ServerMuxHandler(rc4: RC4) extends SimpleChannelInboundHandler[ByteBuf] {
     messageType match {
       case Message.connect =>
         val write: ByteBuf => Unit = byteBuf => {
-          val data = Message.dataMessageTemplate(rc4 encrypt byteBuf)
+          val data = Message.dataMessageTemplate(byteBuf)
           ctx.writeAndFlush(data)
         }
 
@@ -42,7 +42,7 @@ class ServerMuxHandler(rc4: RC4) extends SimpleChannelInboundHandler[ByteBuf] {
         childChannel.foreach(_.close())
 
       case Message.data => map.get(remoteChannelId).foreach {
-        _.writeToLocal(rc4 decrypt msg.getData)
+        _.writeToLocal(msg.getData)
       }
     }
   }

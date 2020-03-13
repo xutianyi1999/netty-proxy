@@ -5,20 +5,20 @@ import java.net.InetSocketAddress
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.{Channel, ChannelInitializer}
 import io.netty.handler.codec.DelimiterBasedFrameDecoder
-import io.netty.handler.codec.bytes.ByteArrayEncoder
+import io.netty.handler.codec.bytes.{ByteArrayDecoder, ByteArrayEncoder}
 import proxy.Factory
 import proxy.client.handler.{ClientMuxHandler, ClientProxyHandler}
 import proxy.common.Convert._
 import proxy.common._
+import proxy.common.handler.{ByteArrayToByteBufDecoder, RC4Decrypt, RC4Encrypt}
 
 import scala.util.{Failure, Success, Try}
 
 object Client {
 
   def start(listen: Int, host: String, port: Int, key: String): Unit = {
-    val rc4 = new RC4(key)
-    startClientMux(host, port, rc4)
-    startClientProxy(listen, rc4)
+    startClientMux(host, port, new RC4(key))
+    startClientProxy(listen)
   }
 
   def mapRemove(channelId: String): Option[Channel] = ClientCatch.map.remove(channelId)
@@ -27,15 +27,14 @@ object Client {
    * 启动客户端代理服务器
    *
    * @param listen 监听端口
-   * @param rc4    rc4加密
    */
-  private def startClientProxy(listen: Int, rc4: RC4): Unit = {
+  private def startClientProxy(listen: Int): Unit = {
     val putChannel: (String, Channel) => Unit = ClientCatch.map.put
 
     val initializer: ChannelInitializer[SocketChannel] = socketChannel => {
       socketChannel.pipeline()
         .addLast(new ByteArrayEncoder)
-        .addLast(new ClientProxyHandler(rc4, putChannel, mapRemove))
+        .addLast(new ClientProxyHandler(putChannel, mapRemove))
     }
 
     Factory.createTcpServerBootstrap
@@ -49,7 +48,6 @@ object Client {
    *
    * @param host 服务器ip
    * @param port 服务器端口
-   * @param rc4  rc4加密
    */
   private def startClientMux(host: String, port: Int, rc4: RC4): Unit = {
     val address = new InetSocketAddress(host, port)
@@ -89,7 +87,11 @@ object Client {
       socketChannel.pipeline()
         .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, Message.delimiter))
         .addLast(new ByteArrayEncoder)
-        .addLast(new ClientMuxHandler(rc4, disconnectListener, write, close))
+        .addLast(new ByteArrayDecoder)
+        .addLast(new RC4Encrypt(rc4))
+        .addLast(new RC4Decrypt(rc4))
+        .addLast(ByteArrayToByteBufDecoder)
+        .addLast(new ClientMuxHandler(disconnectListener, write, close))
     }
 
     val bootstrap = Factory.createTcpBootstrap

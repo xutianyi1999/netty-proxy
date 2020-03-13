@@ -6,8 +6,7 @@ import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
 import proxy.common._
 
 @Sharable
-class ClientMuxHandler(rc4: RC4,
-                       disconnectListener: () => Unit,
+class ClientMuxHandler(disconnectListener: () => Unit,
                        write: (String, => Array[Byte]) => Unit,
                        close: CloseInfo => Unit) extends SimpleChannelInboundHandler[ByteBuf] {
 
@@ -24,7 +23,7 @@ class ClientMuxHandler(rc4: RC4,
 
     messageType match {
       case Message.disconnect => close(CloseOne(channelId))
-      case Message.data => write(channelId, rc4 decrypt msg.getData)
+      case Message.data => write(channelId, msg.getData)
     }
   }
 

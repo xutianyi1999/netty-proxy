@@ -1,20 +1,17 @@
 package proxy.server
 
 import io.netty.buffer.ByteBuf
-import io.netty.channel.local.LocalChannel
-import io.netty.channel.{ChannelFuture, ChannelHandlerContext, ChannelInitializer, SimpleChannelInboundHandler}
-import io.netty.handler.codec.bytes.ByteArrayEncoder
+import io.netty.channel.{ChannelFuture, ChannelHandlerContext, SimpleChannelInboundHandler}
 import io.netty.util.concurrent.GenericFutureListener
-import proxy.Factory
+import proxy.LocalTransportFactory
 import proxy.common.Commons
 
 class ServerChildChannel(write: ByteBuf => Unit, closeListener: () => Unit) {
 
   private var isInitiativeClose = false
 
-  private val localInitializer: ChannelInitializer[LocalChannel] = localChannel => localChannel.pipeline()
-    .addLast(new ByteArrayEncoder)
-    .addLast {
+  private val channelFuture = LocalTransportFactory.createLocalBootstrap
+    .handler {
       new SimpleChannelInboundHandler[ByteBuf] {
         override def channelInactive(ctx: ChannelHandlerContext): Unit = if (!isInitiativeClose) closeListener()
 
@@ -22,11 +19,7 @@ class ServerChildChannel(write: ByteBuf => Unit, closeListener: () => Unit) {
 
         override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = cause.printStackTrace()
       }
-    }
-
-  private val channelFuture = Factory.createLocalBootstrap
-    .handler(localInitializer)
-    .connect(Commons.localAddress)
+    }.connect(Commons.localAddress)
 
   private val channel = channelFuture.channel()
 

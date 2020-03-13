@@ -5,11 +5,10 @@ import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{Channel, ChannelHandlerContext, SimpleChannelInboundHandler}
 import proxy.client.ClientCatch
 import proxy.common.Convert._
-import proxy.common.{Message, RC4}
+import proxy.common.Message
 
 @Sharable
-class ClientProxyHandler(rc4: RC4,
-                         connectListener: (String, Channel) => Unit,
+class ClientProxyHandler(connectListener: (String, Channel) => Unit,
                          disconnectListener: String => Option[Channel]) extends SimpleChannelInboundHandler[ByteBuf] {
 
   override def channelActive(ctx: ChannelHandlerContext): Unit = ClientCatch.remoteChannelOption match {
@@ -31,7 +30,7 @@ class ClientProxyHandler(rc4: RC4,
   }
 
   override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = ClientCatch.remoteChannelOption.foreach {
-    val data = Message.dataMessageTemplate(rc4 encrypt msg)(ctx)
+    val data = Message.dataMessageTemplate(msg)(ctx)
     _.writeAndFlush(data)
   }
 
