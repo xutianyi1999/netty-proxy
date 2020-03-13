@@ -17,7 +17,6 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
           ctx.pipeline().addLast(getChannelInbound(future.channel()))
           new DefaultSocks5CommandResponse(Socks5CommandStatus.SUCCESS, Socks5AddressType.IPv4)
         } else {
-          future.cause().printStackTrace()
           new DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, Socks5AddressType.IPv4)
         }
         ctx.writeAndFlush(commandResponse)
