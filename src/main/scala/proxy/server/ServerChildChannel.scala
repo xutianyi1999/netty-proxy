@@ -1,12 +1,10 @@
 package proxy.server
 
-import java.util.concurrent.TimeUnit
-
 import io.netty.buffer.ByteBuf
 import io.netty.channel.{ChannelFuture, ChannelHandlerContext, SimpleChannelInboundHandler}
 import io.netty.util.concurrent.GenericFutureListener
+import proxy.LocalTransportFactory
 import proxy.common.Commons
-import proxy.{Factory, LocalTransportFactory}
 
 class ServerChildChannel(write: ByteBuf => Unit, closeListener: () => Unit) {
 
@@ -29,7 +27,7 @@ class ServerChildChannel(write: ByteBuf => Unit, closeListener: () => Unit) {
     if (future.isSuccess) {
       channel.flush()
       // thread safety
-      Factory.delay(() => channel.flush(), 500, TimeUnit.MILLISECONDS)
+      // Factory.delay(() => channel.flush(), 500, TimeUnit.MILLISECONDS)
     } else {
       future.cause().printStackTrace()
       closeListener()
