@@ -76,14 +76,15 @@ object Client {
     }(3)(TimeUnit.SECONDS)
 
     val bootstrap = Factory.createTcpBootstrap
-    lazy val channel = bootstrap.connect(address).sync().channel()
+
+    def f(): Channel = bootstrap.connect(address).sync().channel()
 
     val clientInitializer: ChannelInitializer[SocketChannel] = socketChannel => {
       val disconnectListener = () => {
         Commons.log.severe("disconnected")
 
         ClientCatch.remoteChannelOption = Option.empty
-        connect(channel)
+        connect(f())
       }
 
       import proxy.common.Convert.ByteBufConvert.byteArrayToByteBuf
@@ -98,6 +99,6 @@ object Client {
     }
 
     bootstrap.handler(clientInitializer)
-    connect(channel)
+    connect(f())
   }
 }
