@@ -71,7 +71,7 @@ object Client {
         case Failure(exception) => exception.printStackTrace(); connect(channel)
         case Success(v) =>
           ClientCatch.remoteChannelOption = Option(v)
-          Commons.log.info("Server connected")
+          Commons.log.info("Connected")
       }
     }(3)(TimeUnit.SECONDS)
 
@@ -81,7 +81,7 @@ object Client {
 
     val clientInitializer: ChannelInitializer[SocketChannel] = socketChannel => {
       val disconnectListener = () => {
-        Commons.log.severe("disconnected")
+        Commons.log.severe("Disconnected")
 
         ClientCatch.remoteChannelOption = Option.empty
         connect(f())
