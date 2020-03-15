@@ -34,7 +34,7 @@ object Server {
     val rc4 = new RC4(key)
 
     val tcpInitializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
-      .addLast(new ReadTimeoutHandler(60))
+      .addLast(new ReadTimeoutHandler(120))
       .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, Message.delimiter))
       .addLast(new ByteArrayEncoder)
       .addLast(new ByteArrayDecoder)

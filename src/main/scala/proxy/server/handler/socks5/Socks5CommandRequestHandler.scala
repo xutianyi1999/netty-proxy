@@ -2,7 +2,9 @@ package proxy.server.handler.socks5
 
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel._
+import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.socksx.v5._
+import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.util.concurrent.GenericFutureListener
 import proxy.Factory
 
@@ -22,8 +24,12 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
         ctx.writeAndFlush(commandResponse)
       }
 
+      val tcpInitializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
+        .addLast(new ReadTimeoutHandler(120))
+        .addLast(getChannelInbound(ctx.channel()))
+
       Factory.createTcpBootstrap
-        .handler(getChannelInbound(ctx.channel()))
+        .handler(tcpInitializer)
         .connect(msg.dstAddr(), msg.dstPort())
         .addListener(connectListener)
     }
