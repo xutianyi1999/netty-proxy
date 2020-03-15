@@ -49,20 +49,18 @@ class ClientMuxChannel(name: String, host: String, port: Int, rc4: RC4) {
 
   private val bootstrap = Factory.createTcpBootstrap
 
-  private def connect(): Unit = {
-    val connectListener: GenericFutureListener[ChannelFuture] = future =>
-      if (future.isSuccess) {
-        Commons.log.info(s"$name connected")
-        channelOption = Option(future.channel())
-      } else {
-        future.cause().printStackTrace()
-        connect()
-      }
+  val connectListener: GenericFutureListener[ChannelFuture] = future =>
+    if (future.isSuccess) {
+      Commons.log.info(s"$name connected")
+      channelOption = Option(future.channel())
+    } else {
+      future.cause().printStackTrace()
+      connect()
+    }
 
-    Factory.delay.curried { () =>
-      bootstrap.connect(host, port).addListener(connectListener)
-    }(3)(TimeUnit.SECONDS)
-  }
+  private def connect(): Unit = Factory.delay.curried { () =>
+    bootstrap.connect(host, port).addListener(connectListener)
+  }(3)(TimeUnit.SECONDS)
 
   private val disconnectListener = () => {
     Commons.log.severe(s"$name disconnected")

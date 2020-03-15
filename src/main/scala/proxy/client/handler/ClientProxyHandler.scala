@@ -5,9 +5,11 @@ import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
 import proxy.client.ClientMuxChannel
 import proxy.common.Message
 
-class ClientProxyHandler(clientMuxChannel: ClientMuxChannel) extends SimpleChannelInboundHandler[ByteBuf] {
+class ClientProxyHandler(getClientMuxChannel: () => ClientMuxChannel) extends SimpleChannelInboundHandler[ByteBuf] {
 
   import proxy.common.Convert.ChannelIdConvert._
+
+  private val clientMuxChannel = getClientMuxChannel()
 
   override def channelActive(ctx: ChannelHandlerContext): Unit =
     if (clientMuxChannel.isActive) {

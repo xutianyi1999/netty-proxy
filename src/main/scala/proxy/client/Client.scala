@@ -27,7 +27,7 @@ object Client {
     val initializer: ChannelInitializer[SocketChannel] = socketChannel => {
       socketChannel.pipeline()
         .addLast(new ByteArrayEncoder)
-        .addLast(new ClientProxyHandler(getClientMuxChannel))
+        .addLast(new ClientProxyHandler(() => getClientMuxChannel))
     }
 
     Factory.createTcpServerBootstrap
@@ -50,6 +50,6 @@ object Client {
       (1 to count).map(i => new ClientMuxChannel(s"${tuple._1}-$i", host, port, rc4))
     }
 
-    jsonObject.asScala.toStream.flatMap(f)
+    jsonObject.asScala.flatMap(f).toSeq
   }
 }
