@@ -21,7 +21,11 @@ object Client {
 
     def getClientMuxChannel: ClientMuxChannel = {
       val seq = clientMuxChannelSeq.filter(_.isActive)
-      seq(Random.nextInt(seq.length))
+
+      if (seq.nonEmpty)
+        seq(Random.nextInt(seq.length))
+      else
+        throw new Exception("Connection pool is empty")
     }
 
     val initializer: ChannelInitializer[SocketChannel] = socketChannel => {
