@@ -26,8 +26,6 @@ class ServerChildChannel(write: ByteBuf => Unit, closeListener: () => Unit) {
   private val connectListener: GenericFutureListener[ChannelFuture] = future =>
     if (future.isSuccess) {
       channel.flush()
-      // thread safety
-      // Factory.delay(() => channel.flush(), 500, TimeUnit.MILLISECONDS)
     } else {
       future.cause().printStackTrace()
       closeListener()

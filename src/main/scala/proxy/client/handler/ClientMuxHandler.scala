@@ -1,10 +1,8 @@
 package proxy.client.handler
 
-import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
 import proxy.common._
 
-@Sharable
 class ClientMuxHandler(disconnectListener: () => Unit,
                        write: (String, => Array[Byte]) => Unit,
                        close: CloseInfo => Unit) extends SimpleChannelInboundHandler[Array[Byte]] {

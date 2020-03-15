@@ -8,35 +8,24 @@ import proxy.server.Server
 
 object Launcher extends App {
 
-  def autoClose[A <: AutoCloseable, B](closeable: A)(fun: A ⇒ B): B = {
-    try {
-      fun(closeable)
-    } finally {
-      closeable.close()
-    }
-  }
+  import proxy.common.Commons.autoClose
 
-  val config = autoClose(this.getClass.getResourceAsStream("/config.json")) {
+  def getConfig(path: String): JSONObject = autoClose(this.getClass.getResourceAsStream(path)) {
     JSON.parseObject[JSONObject](_, StandardCharsets.UTF_8, classOf[JSONObject])
   }
 
-  val key = config.getString("key")
-
   args(0) match {
-    case "server" => server(config.getJSONObject("server"))
-    case "client" => client(config.getJSONObject("client"))
+    case "server" => server(getConfig("/server-config.json"))
+    case "client" => client(getConfig("/client-config.json"))
   }
 
-  def server(jsonObject: JSONObject): Unit = Server.start(jsonObject.getIntValue("listen"), key)
+  def server(jsonObject: JSONObject): Unit = Server.start(
+    jsonObject.getIntValue("listen"),
+    jsonObject.getString("key")
+  )
 
-  def client(jsonObject: JSONObject): Unit = {
-    val remote = jsonObject.getJSONObject("remote")
-
-    Client.start(
-      jsonObject.getIntValue("listen"),
-      remote.getString("host"),
-      remote.getIntValue("port"),
-      key
-    )
-  }
+  def client(jsonObject: JSONObject): Unit = Client.start(
+    jsonObject.getIntValue("listen"),
+    jsonObject.getJSONObject("remote")
+  )
 }
