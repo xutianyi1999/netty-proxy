@@ -15,7 +15,9 @@ import proxy.{Factory, LocalTransportFactory}
 
 object Server {
 
-  def start(listen: Int, key: String): Unit = {
+  def start(listen: Int, key: String, readTimeOut: Int): Unit = {
+    Commons.readTimeOut = readTimeOut
+
     val localInitializer: ChannelInitializer[LocalChannel] = localChannel => localChannel.pipeline()
       .addLast(ByteArrayToByteBufDecoder)
       .addLast(Socks5ServerEncoder.DEFAULT)
@@ -34,7 +36,7 @@ object Server {
     val rc4 = new RC4(key)
 
     val tcpInitializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
-      .addLast(new ReadTimeoutHandler(120))
+      .addLast(new ReadTimeoutHandler(readTimeOut))
       .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, Message.delimiter))
       .addLast(new ByteArrayEncoder)
       .addLast(new ByteArrayDecoder)

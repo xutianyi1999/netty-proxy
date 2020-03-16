@@ -7,6 +7,7 @@ import io.netty.handler.codec.socksx.v5._
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.util.concurrent.GenericFutureListener
 import proxy.Factory
+import proxy.common.Commons
 
 @Sharable
 object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSocks5CommandRequest] {
@@ -25,7 +26,7 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
       }
 
       val tcpInitializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
-        .addLast(new ReadTimeoutHandler(120))
+        .addLast(new ReadTimeoutHandler(Commons.readTimeOut))
         .addLast(getChannelInbound(ctx.channel()))
 
       Factory.createTcpBootstrap

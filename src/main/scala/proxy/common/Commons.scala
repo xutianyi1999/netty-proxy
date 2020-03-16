@@ -16,4 +16,7 @@ object Commons {
       closeable.close()
     }
   }
+
+  // server
+  var readTimeOut: Int = _
 }

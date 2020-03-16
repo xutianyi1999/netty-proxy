@@ -1,5 +1,6 @@
 package proxy
 
+import java.io.FileInputStream
 import java.nio.charset.StandardCharsets
 
 import com.alibaba.fastjson.{JSON, JSONObject}
@@ -10,22 +11,23 @@ object Launcher extends App {
 
   import proxy.common.Commons.autoClose
 
-  def getConfig(path: String): JSONObject = autoClose(this.getClass.getResourceAsStream(path)) {
+  val config = autoClose(new FileInputStream(args(1))) {
     JSON.parseObject[JSONObject](_, StandardCharsets.UTF_8, classOf[JSONObject])
   }
 
   args(0) match {
-    case "server" => server(getConfig("/server-config.json"))
-    case "client" => client(getConfig("/client-config.json"))
+    case "server" => server()
+    case "client" => client()
   }
 
-  def server(jsonObject: JSONObject): Unit = Server.start(
-    jsonObject.getIntValue("listen"),
-    jsonObject.getString("key")
+  def server(): Unit = Server.start(
+    config.getIntValue("listen"),
+    config.getString("key"),
+    config.getIntValue("readTimeout")
   )
 
-  def client(jsonObject: JSONObject): Unit = Client.start(
-    jsonObject.getIntValue("listen"),
-    jsonObject.getJSONObject("remote")
+  def client(): Unit = Client.start(
+    config.getIntValue("listen"),
+    config.getJSONObject("remote")
   )
 }
