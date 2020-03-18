@@ -5,7 +5,8 @@ import proxy.common._
 
 class ClientMuxHandler(disconnectListener: () => Unit,
                        write: (String, => Array[Byte]) => Unit,
-                       close: CloseInfo => Unit) extends SimpleChannelInboundHandler[Array[Byte]] {
+                       close: CloseInfo => Unit,
+                       setAutoRead: Boolean => Unit) extends SimpleChannelInboundHandler[Array[Byte]] {
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = {
     close(CloseAll)
@@ -23,6 +24,8 @@ class ClientMuxHandler(disconnectListener: () => Unit,
       case Message.data => write(channelId, msg.getData)
     }
   }
+
+  override def channelWritabilityChanged(ctx: ChannelHandlerContext): Unit = setAutoRead(ctx.channel().isWritable)
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = cause.printStackTrace()
 }

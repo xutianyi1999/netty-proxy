@@ -44,7 +44,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, rc4: RC4) {
       map.clear()
       values.foreach(_.close())
 
-    case CloseOne(channelId) => map.remove(channelId).foreach(_.close())
+    case CloseOne(channelId) => remove(channelId).foreach(_.close())
   }
 
   private val bootstrap = Factory.createTcpBootstrap
@@ -68,6 +68,10 @@ class ClientMuxChannel(name: String, host: String, port: Int, rc4: RC4) {
     connect()
   }
 
+  private val setAutoRead: Boolean => Unit = { flag =>
+    map.foreach(_._2.config().setAutoRead(flag))
+  }
+
   private val clientInitializer: ChannelInitializer[SocketChannel] = socketChannel => {
     import proxy.common.Convert.ByteBufConvert.byteArrayToByteBuf
     socketChannel.pipeline()
@@ -76,7 +80,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, rc4: RC4) {
       .addLast(new ByteArrayDecoder)
       .addLast(new RC4Encrypt(rc4))
       .addLast(new RC4Decrypt(rc4))
-      .addLast(new ClientMuxHandler(disconnectListener, writeToLocal, close))
+      .addLast(new ClientMuxHandler(disconnectListener, writeToLocal, close, setAutoRead))
   }
 
   bootstrap.handler(clientInitializer)
