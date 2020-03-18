@@ -8,7 +8,7 @@ import proxy.common.Commons
 
 class ServerChildChannel(write: ByteBuf => Unit, closeListener: () => Unit) {
 
-  private var isInitiativeClose = false
+  @volatile private var isInitiativeClose = false
 
   private val channelFuture = LocalTransportFactory.createLocalBootstrap
     .handler {

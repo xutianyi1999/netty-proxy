@@ -18,7 +18,7 @@ import scala.collection.mutable
 class ClientMuxChannel(name: String, host: String, port: Int, rc4: RC4) {
 
   private val map: mutable.Map[String, Channel] = new ConcurrentHashMap[String, Channel].asScala
-  private var channelOption = Option.empty[Channel]
+  @volatile private var channelOption = Option.empty[Channel]
 
   def isActive: Boolean = channelOption.isDefined
 
