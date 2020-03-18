@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import io.netty.bootstrap.{Bootstrap, ServerBootstrap}
 import io.netty.channel.EventLoopGroup
-import io.netty.channel.epoll.{EpollEventLoopGroup, EpollServerSocketChannel, EpollSocketChannel}
+import io.netty.channel.epoll.{Epoll, EpollEventLoopGroup, EpollServerSocketChannel, EpollSocketChannel}
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.{NioServerSocketChannel, NioSocketChannel}
 import io.netty.channel.socket.{ServerSocketChannel, SocketChannel}
@@ -12,9 +12,8 @@ import io.netty.util.concurrent.ScheduledFuture
 import proxy.common.Commons
 
 object Factory {
-  val isLinux: Boolean = System.getProperty("os.name").contains("Linux")
 
-  private val tuple = if (isLinux) {
+  private val tuple = if (Epoll.isAvailable) {
     Commons.log.info("Epoll transport")
     (new EpollEventLoopGroup(), new EpollEventLoopGroup(), classOf[EpollServerSocketChannel], classOf[EpollSocketChannel])
   } else {
