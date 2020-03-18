@@ -1,16 +1,17 @@
 package proxy.server
 
 import io.netty.buffer.ByteBuf
-import io.netty.channel.{ChannelFuture, ChannelHandlerContext, SimpleChannelInboundHandler}
+import io.netty.channel.{ChannelFuture, ChannelHandlerContext, ChannelOption, SimpleChannelInboundHandler}
 import io.netty.util.concurrent.GenericFutureListener
 import proxy.LocalTransportFactory
 import proxy.common.Commons
 
-class ServerChildChannel(write: ByteBuf => Unit, closeListener: () => Unit) {
+class ServerChildChannel(isWriteable: Boolean, write: ByteBuf => Unit, closeListener: () => Unit) {
 
   @volatile private var isInitiativeClose = false
 
   private val channelFuture = LocalTransportFactory.createLocalBootstrap
+    .option[java.lang.Boolean](ChannelOption.AUTO_READ, isWriteable)
     .handler {
       new SimpleChannelInboundHandler[ByteBuf] {
         override def channelInactive(ctx: ChannelHandlerContext): Unit = if (!isInitiativeClose) closeListener()

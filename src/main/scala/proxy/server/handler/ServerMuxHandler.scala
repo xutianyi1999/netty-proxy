@@ -35,7 +35,7 @@ class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
           ctx.writeAndFlush(Message.disconnectMessageTemplate)
         }
 
-        val childChannel = new ServerChildChannel(write, disconnectListener)
+        val childChannel = new ServerChildChannel(ctx.channel().isWritable, write, disconnectListener)
         map.put(remoteChannelId, childChannel)
 
       case Message.disconnect =>

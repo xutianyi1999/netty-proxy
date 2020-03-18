@@ -28,6 +28,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, rc4: RC4) {
   }
 
   def register(channelId: String, channel: Channel): ClientMuxChannel = {
+    channel.config().setAutoRead(channelOption.get.isWritable)
     map.put(channelId, channel)
     this
   }
