@@ -38,9 +38,7 @@ class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
         val childChannel = new ServerChildChannel(ctx.channel().isWritable, write, disconnectListener)
         map.put(remoteChannelId, childChannel)
 
-      case Message.disconnect =>
-        val childChannel = map.remove(remoteChannelId)
-        childChannel.foreach(_.close())
+      case Message.disconnect => map.remove(remoteChannelId).foreach(_.close())
 
       case Message.data => map.get(remoteChannelId).foreach {
         _.writeToLocal(msg.getData)
