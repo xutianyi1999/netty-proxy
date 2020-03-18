@@ -48,5 +48,9 @@ class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
     }
   }
 
+  override def channelWritabilityChanged(ctx: ChannelHandlerContext): Unit = {
+    map.foreach(_._2.setAutoRead(ctx.channel().isWritable))
+  }
+
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = cause.printStackTrace()
 }

@@ -43,4 +43,6 @@ class ServerChildChannel(write: ByteBuf => Unit, closeListener: () => Unit) {
     isInitiativeClose = true
     channel.close()
   }
+
+  def setAutoRead(flag: Boolean): Unit = channel.config().setAutoRead(flag)
 }

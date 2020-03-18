@@ -17,7 +17,7 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
       val connectListener: GenericFutureListener[ChannelFuture] = future => {
 
         val commandResponse = if (future.isSuccess) {
-          ctx.pipeline().addLast(getChannelInbound(future.channel()))
+          ctx.pipeline().addLast(localInbound(future.channel()))
           new DefaultSocks5CommandResponse(Socks5CommandStatus.SUCCESS, Socks5AddressType.IPv4)
         } else {
           new DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, Socks5AddressType.IPv4)
@@ -27,7 +27,7 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
 
       val tcpInitializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
         .addLast(new ReadTimeoutHandler(Commons.readTimeOut))
-        .addLast(getChannelInbound(ctx.channel()))
+        .addLast(remoteInbound(ctx.channel()))
 
       Factory.createTcpBootstrap
         .handler(tcpInitializer)
@@ -35,7 +35,21 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
         .addListener(connectListener)
     }
 
-  def getChannelInbound(dst: Channel): ChannelInboundHandlerAdapter = new ChannelInboundHandlerAdapter {
+  def localInbound(dst: Channel): ChannelInboundHandlerAdapter = new ChannelInboundHandlerAdapter {
+    override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
+      dst.writeAndFlush(msg)
+    }
+
+    override def channelInactive(ctx: ChannelHandlerContext): Unit = dst.close()
+
+    override def channelWritabilityChanged(ctx: ChannelHandlerContext): Unit = {
+      dst.config().setAutoRead(ctx.channel().isWritable)
+    }
+
+    override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = cause.printStackTrace()
+  }
+
+  def remoteInbound(dst: Channel): ChannelInboundHandlerAdapter = new ChannelInboundHandlerAdapter {
     override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
       dst.writeAndFlush(msg)
     }
