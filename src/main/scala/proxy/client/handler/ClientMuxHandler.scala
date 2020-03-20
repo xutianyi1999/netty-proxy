@@ -27,5 +27,5 @@ class ClientMuxHandler(disconnectListener: () => Unit,
 
   override def channelWritabilityChanged(ctx: ChannelHandlerContext): Unit = setAutoRead(ctx.channel().isWritable)
 
-  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = cause.printStackTrace()
+  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)
 }

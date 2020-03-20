@@ -3,7 +3,7 @@ package proxy.client.handler
 import io.netty.buffer.ByteBuf
 import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
 import proxy.client.ClientMuxChannel
-import proxy.common.Message
+import proxy.common.{Commons, Message}
 
 class ClientProxyHandler(getClientMuxChannel: () => ClientMuxChannel) extends SimpleChannelInboundHandler[ByteBuf] {
 
@@ -35,5 +35,5 @@ class ClientProxyHandler(getClientMuxChannel: () => ClientMuxChannel) extends Si
     clientMuxChannel.writeToRemote(Message.dataMessageTemplate(msg)(ctx))
   }
 
-  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = cause.printStackTrace()
+  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)
 }

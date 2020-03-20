@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import io.netty.buffer.ByteBuf
 import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
-import proxy.common.Message
+import proxy.common.{Commons, Message}
 import proxy.server.ServerChildChannel
 
 import scala.collection.JavaConverters._
@@ -47,8 +47,11 @@ class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
   }
 
   override def channelWritabilityChanged(ctx: ChannelHandlerContext): Unit = {
-    map.foreach(_._2.setAutoRead(ctx.channel().isWritable))
+    val channel = ctx.channel()
+    val isWriteable = channel.isWritable
+    Commons.log.warning(s"Mux channel writability Changed: ${channel.id().asShortText()}---$isWriteable")
+    map.foreach(_._2.setAutoRead(isWriteable))
   }
 
-  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = cause.printStackTrace()
+  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)
 }

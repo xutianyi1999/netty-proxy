@@ -43,10 +43,13 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
     override def channelInactive(ctx: ChannelHandlerContext): Unit = dst.close()
 
     override def channelWritabilityChanged(ctx: ChannelHandlerContext): Unit = {
-      dst.config().setAutoRead(ctx.channel().isWritable)
+      val channel = ctx.channel()
+      val isWriteable = channel.isWritable
+      Commons.log.warning(s"Child channel writability Changed: ${channel.id().asShortText()}---$isWriteable")
+      dst.config().setAutoRead(isWriteable)
     }
 
-    override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = cause.printStackTrace()
+    override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)
   }
 
   def remoteInbound(dst: Channel): ChannelInboundHandlerAdapter = new ChannelInboundHandlerAdapter {
@@ -56,6 +59,6 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
 
     override def channelInactive(ctx: ChannelHandlerContext): Unit = dst.close()
 
-    override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = cause.printStackTrace()
+    override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)
   }
 }
