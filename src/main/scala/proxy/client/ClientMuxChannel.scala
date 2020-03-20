@@ -55,7 +55,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, rc4: RC4) {
       Commons.log.info(s"$name connected")
       channelOption = Option(future.channel())
     } else {
-      future.cause().printStackTrace()
+      Commons.log.severe(future.cause().getMessage)
       connect()
     }
 

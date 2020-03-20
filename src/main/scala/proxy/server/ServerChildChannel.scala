@@ -28,7 +28,7 @@ class ServerChildChannel(isWriteable: Boolean, write: ByteBuf => Unit, closeList
     if (future.isSuccess) {
       channel.flush()
     } else {
-      future.cause().printStackTrace()
+      Commons.log.severe(future.cause().getMessage)
       closeListener()
     }
 
