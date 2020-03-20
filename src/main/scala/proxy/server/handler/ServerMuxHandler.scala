@@ -47,10 +47,7 @@ class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
   }
 
   override def channelWritabilityChanged(ctx: ChannelHandlerContext): Unit = {
-    val channel = ctx.channel()
-    val isWriteable = channel.isWritable
-    Commons.log.warning(s"Mux channel writability Changed: ${channel.id().asShortText()}---$isWriteable")
-    map.foreach(_._2.setAutoRead(isWriteable))
+    map.foreach(_._2.setAutoRead(ctx.channel().isWritable))
   }
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)
