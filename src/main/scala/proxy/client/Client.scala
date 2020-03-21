@@ -12,6 +12,7 @@ import scala.collection.JavaConverters._
 import scala.util.Random
 
 object Client {
+
   def start(listen: Int, remote: JSONObject): Unit = {
     startClientProxy(listen, remote)
   }
@@ -53,9 +54,7 @@ object Client {
       rc4 = new RC4(json.getString("key"))
 
       id <- 1 to count
-    } yield {
-      new ClientMuxChannel(s"${tuple._1}-$id", host, port, rc4)
-    }
+    } yield new ClientMuxChannel(s"${tuple._1}-$id", host, port, rc4)
 
     l.toSeq
   }
