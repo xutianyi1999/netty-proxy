@@ -43,17 +43,20 @@ object Client {
   }
 
   private def distribution(jsonObject: JSONObject): Seq[ClientMuxChannel] = {
-    val f: ((String, AnyRef)) => Seq[ClientMuxChannel] = { tuple =>
-      val json = tuple._2.asInstanceOf[JSONObject]
+    val l = for {
+      tuple <- jsonObject.asScala
+      json = tuple._2.asInstanceOf[JSONObject]
 
-      val count = json.getIntValue("connections")
-      val host = json.getString("host")
-      val port = json.getIntValue("port")
-      val rc4 = new RC4(json.getString("key"))
+      count = json.getIntValue("connections")
+      host = json.getString("host")
+      port = json.getIntValue("port")
+      rc4 = new RC4(json.getString("key"))
 
-      (1 to count).map(i => new ClientMuxChannel(s"${tuple._1}-$i", host, port, rc4))
+      id <- 1 to count
+    } yield {
+      new ClientMuxChannel(s"${tuple._1}-$id", host, port, rc4)
     }
 
-    jsonObject.asScala.flatMap(f).toSeq
+    l.toSeq
   }
 }
