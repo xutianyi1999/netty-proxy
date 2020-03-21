@@ -18,9 +18,7 @@ class ClientProxyHandler(getClientMuxChannel: () => ClientMuxChannel) extends Si
       clientMuxChannel
         .register(channelId, ctx.channel())
         .writeToRemote(Message.connectMessageTemplate)
-    } else {
-      ctx.close()
-    }
+    } else ctx.close()
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = {
     implicit val channelId: String = ctx

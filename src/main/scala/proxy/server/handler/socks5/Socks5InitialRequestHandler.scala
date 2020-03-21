@@ -9,11 +9,9 @@ object Socks5InitialRequestHandler extends SimpleChannelInboundHandler[DefaultSo
 
   private val initialResponse = new DefaultSocks5InitialResponse(Socks5AuthMethod.NO_AUTH)
 
-  override def channelRead0(ctx: ChannelHandlerContext, msg: DefaultSocks5InitialRequest): Unit = {
-    if (msg.decoderResult().isSuccess) {
+  override def channelRead0(ctx: ChannelHandlerContext, msg: DefaultSocks5InitialRequest): Unit =
+    if (msg.decoderResult().isSuccess)
       ctx.writeAndFlush(initialResponse)
-    } else {
+    else
       ctx.close()
-    }
-  }
 }
