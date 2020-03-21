@@ -3,7 +3,7 @@ package proxy.server.handler
 import java.util.concurrent.ConcurrentHashMap
 
 import io.netty.buffer.ByteBuf
-import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
+import io.netty.channel.{Channel, ChannelHandlerContext, SimpleChannelInboundHandler}
 import proxy.common.{Commons, Message}
 import proxy.server.ServerChildChannel
 
@@ -25,9 +25,10 @@ class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
 
     messageType match {
       case Message.connect =>
-        val write: ByteBuf => Unit = byteBuf => {
+        val write: (ByteBuf, Channel) => Unit = (byteBuf, localChannel) => {
           val data = Message.dataMessageTemplate(byteBuf)
           ctx.writeAndFlush(data)
+          localChannel.config().setAutoRead(ctx.channel().isWritable)
         }
 
         val disconnectListener: () => Unit = () => {
