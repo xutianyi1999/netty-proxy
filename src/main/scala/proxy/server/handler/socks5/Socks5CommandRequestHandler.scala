@@ -23,7 +23,7 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
           Socks5CommandStatus.FAILURE
         }
 
-        ctx.writeAndFlush(new DefaultSocks5CommandResponse(res, msg.dstAddrType))
+        ctx.writeAndFlush(new DefaultSocks5CommandResponse(res, Socks5AddressType.IPv4))
       }
 
       val tcpInitializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
@@ -35,7 +35,7 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
         .connect(msg.dstAddr(), msg.dstPort())
         .addListener(connectListener)
     } else {
-      ctx.writeAndFlush(new DefaultSocks5CommandResponse(Socks5CommandStatus.COMMAND_UNSUPPORTED, msg.dstAddrType))
+      ctx.writeAndFlush(new DefaultSocks5CommandResponse(Socks5CommandStatus.COMMAND_UNSUPPORTED, Socks5AddressType.IPv4))
     }
 
   def localInbound(dst: Channel): ChannelInboundHandlerAdapter = new ChannelInboundHandlerAdapter {

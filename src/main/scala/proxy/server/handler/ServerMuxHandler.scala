@@ -41,9 +41,7 @@ class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
 
       case Message.disconnect => map.remove(remoteChannelId).foreach(_.close())
 
-      case Message.data => map.get(remoteChannelId).foreach {
-        _.writeToLocal(msg.getData)
-      }
+      case Message.data => map.get(remoteChannelId).foreach(_.writeToLocal(msg.getData))
     }
   }
 
