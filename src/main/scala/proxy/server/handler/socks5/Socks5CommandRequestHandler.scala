@@ -35,7 +35,7 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
         .connect(msg.dstAddr(), msg.dstPort())
         .addListener(connectListener)
     } else {
-      ctx.writeAndFlush(new DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, msg.dstAddrType))
+      ctx.writeAndFlush(new DefaultSocks5CommandResponse(Socks5CommandStatus.COMMAND_UNSUPPORTED, msg.dstAddrType))
     }
 
   def localInbound(dst: Channel): ChannelInboundHandlerAdapter = new ChannelInboundHandlerAdapter {
