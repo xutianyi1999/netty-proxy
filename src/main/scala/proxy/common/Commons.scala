@@ -10,10 +10,8 @@ object Commons {
   val log: Logger = Logger.getGlobal
 
   def autoClose[A <: AutoCloseable, B](closeable: A)(fun: A ⇒ B): B = {
-    try
-      fun(closeable)
-    finally
-      closeable.close()
+    try fun(closeable)
+    finally closeable.close()
   }
 
   // server
