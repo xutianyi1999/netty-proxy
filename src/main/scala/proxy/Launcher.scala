@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets
 
 import com.alibaba.fastjson.{JSON, JSONObject}
 import proxy.client.Client
+import proxy.common.Commons
 import proxy.server.Server
 
 object Launcher extends App {
@@ -14,6 +15,11 @@ object Launcher extends App {
   val config = autoClose(new FileInputStream(args(1))) {
     JSON.parseObject[JSONObject](_, StandardCharsets.UTF_8, classOf[JSONObject])
   }
+
+  val trafficShaping = config.getJSONObject("trafficShaping")
+
+  Commons.isTrafficShapingEnable = trafficShaping.getBoolean("isEnable")
+  Commons.delay = trafficShaping.getIntValue("delay")
 
   args(0) match {
     case "server" => server()

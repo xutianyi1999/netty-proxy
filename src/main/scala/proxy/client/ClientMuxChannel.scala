@@ -22,10 +22,13 @@ class ClientMuxChannel(name: String, host: String, port: Int, rc4: RC4) {
 
   def isActive: Boolean = channelOption.isDefined
 
-  def writeToRemote(data: => Array[Byte]): ClientMuxChannel = {
-    channelOption.foreach(_.writeAndFlush(data))
-    this
-  }
+  def writeToRemoteData(data: => Array[Byte], readChannel: Channel): Unit =
+    channelOption.foreach { remoteChannel =>
+      readChannel.writeAndFlush(data)
+      Commons.trafficShaping(remoteChannel, readChannel, Factory.delay)
+    }
+
+  def writeToRemoteEvent(data: => Array[Byte]): Unit = channelOption.foreach(_.writeAndFlush(data))
 
   def register(channelId: String, channel: Channel): ClientMuxChannel = {
     channel.config().setAutoRead(channelOption.get.isWritable)
@@ -69,10 +72,6 @@ class ClientMuxChannel(name: String, host: String, port: Int, rc4: RC4) {
     connect()
   }
 
-  private val setAutoRead: Boolean => Unit = { flag =>
-    map.foreach(_._2.config().setAutoRead(flag))
-  }
-
   private val clientInitializer: ChannelInitializer[SocketChannel] = socketChannel => {
     import proxy.common.Convert.ByteBufConvert.byteArrayToByteBuf
     socketChannel.pipeline()
@@ -81,7 +80,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, rc4: RC4) {
       .addLast(new ByteArrayDecoder)
       .addLast(new RC4Encrypt(rc4))
       .addLast(new RC4Decrypt(rc4))
-      .addLast(new ClientMuxHandler(disconnectListener, writeToLocal, close, setAutoRead))
+      .addLast(new ClientMuxHandler(disconnectListener, writeToLocal, close))
   }
 
   bootstrap.handler(clientInitializer)

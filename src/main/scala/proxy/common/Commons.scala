@@ -20,12 +20,16 @@ object Commons {
   // server
   var readTimeOut: Int = _
 
-  def trafficShaping(writeChannel: Channel, readChannel: Channel, delayF: (Runnable, Long, TimeUnit) => ScheduledFuture[_]): Unit = {
-    val isWriteable = writeChannel.isWritable
+  var isTrafficShapingEnable: Boolean = _
+  var delay: Int = _
 
-    if (!isWriteable) {
-      delayF(() => trafficShaping(writeChannel, readChannel, delayF), 500, TimeUnit.MILLISECONDS)
+  def trafficShaping(writeChannel: Channel, readChannel: Channel, delayF: (Runnable, Long, TimeUnit) => ScheduledFuture[_]): Unit =
+    if (isTrafficShapingEnable && writeChannel.isActive && readChannel.isActive) {
+      val isWriteable = writeChannel.isWritable
+
+      if (!isWriteable) {
+        delayF(() => trafficShaping(writeChannel, readChannel, delayF), delay, TimeUnit.MILLISECONDS)
+      }
+      readChannel.config().setAutoRead(isWriteable)
     }
-    readChannel.config().setAutoRead(isWriteable)
-  }
 }

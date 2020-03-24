@@ -17,7 +17,7 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
       val connectListener: GenericFutureListener[ChannelFuture] = future => {
 
         val res = if (future.isSuccess) {
-          ctx.pipeline().addLast(localInbound(future.channel()))
+          ctx.pipeline().addLast(new InboundHandler(future.channel()))
           Socks5CommandStatus.SUCCESS
         } else {
           Socks5CommandStatus.FAILURE
@@ -26,9 +26,21 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
         ctx.writeAndFlush(new DefaultSocks5CommandResponse(res, Socks5AddressType.IPv4))
       }
 
-      val tcpInitializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
-        .addLast(new ReadTimeoutHandler(Commons.readTimeOut))
-        .addLast(remoteInbound(ctx.channel()))
+
+      val tcpInitializer: ChannelInitializer[SocketChannel] = socketChannel => {
+        val dst = ctx.channel()
+
+        val handler = new InboundHandler(dst) {
+          override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
+            dst.writeAndFlush(msg)
+            Commons.trafficShaping(dst, ctx.channel(), Factory.delay)
+          }
+        }
+
+        socketChannel.pipeline()
+          .addLast(new ReadTimeoutHandler(Commons.readTimeOut))
+          .addLast(handler)
+      }
 
       Factory.createTcpBootstrap
         .handler(tcpInitializer)
@@ -38,24 +50,13 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
       ctx.writeAndFlush(new DefaultSocks5CommandResponse(Socks5CommandStatus.COMMAND_UNSUPPORTED, Socks5AddressType.IPv4))
     }
 
-  def localInbound(dst: Channel): ChannelInboundHandlerAdapter = new ChannelInboundHandlerAdapter {
-    override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
-      dst.writeAndFlush(msg)
-    }
+  class InboundHandler(dst: Channel) extends ChannelInboundHandlerAdapter {
+
+    override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = dst.writeAndFlush(msg)
 
     override def channelInactive(ctx: ChannelHandlerContext): Unit = dst.close()
 
     override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)
   }
 
-  def remoteInbound(dst: Channel): ChannelInboundHandlerAdapter = new ChannelInboundHandlerAdapter {
-    override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
-      dst.writeAndFlush(msg)
-      Commons.trafficShaping(dst, ctx.channel(), Factory.delay)
-    }
-
-    override def channelInactive(ctx: ChannelHandlerContext): Unit = dst.close()
-
-    override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)
-  }
 }
