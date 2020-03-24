@@ -45,17 +45,13 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
 
     override def channelInactive(ctx: ChannelHandlerContext): Unit = dst.close()
 
-    override def channelWritabilityChanged(ctx: ChannelHandlerContext): Unit = {
-      dst.config().setAutoRead(ctx.channel().isWritable)
-    }
-
     override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)
   }
 
   def remoteInbound(dst: Channel): ChannelInboundHandlerAdapter = new ChannelInboundHandlerAdapter {
     override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
       dst.writeAndFlush(msg)
-      ctx.channel().config().setAutoRead(dst.isWritable)
+      Commons.trafficShaping(dst, ctx.channel(), Factory.delay)
     }
 
     override def channelInactive(ctx: ChannelHandlerContext): Unit = dst.close()

@@ -4,6 +4,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import io.netty.buffer.ByteBuf
 import io.netty.channel.{Channel, ChannelHandlerContext, SimpleChannelInboundHandler}
+import proxy.LocalTransportFactory
 import proxy.common.{Commons, Message}
 import proxy.server.ServerChildChannel
 
@@ -28,7 +29,7 @@ class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
         val write: (ByteBuf, Channel) => Unit = (byteBuf, localChannel) => {
           val data = Message.dataMessageTemplate(byteBuf)
           ctx.writeAndFlush(data)
-          localChannel.config().setAutoRead(ctx.channel().isWritable)
+          Commons.trafficShaping(ctx.channel(), localChannel, LocalTransportFactory.delay)
         }
 
         val disconnectListener: () => Unit = () => {
@@ -36,17 +37,13 @@ class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
           ctx.writeAndFlush(Message.disconnectMessageTemplate)
         }
 
-        val childChannel = new ServerChildChannel(ctx.channel().isWritable, write, disconnectListener)
+        val childChannel = new ServerChildChannel(write, disconnectListener)
         map.put(remoteChannelId, childChannel)
 
       case Message.disconnect => map.remove(remoteChannelId).foreach(_.close())
 
       case Message.data => map.get(remoteChannelId).foreach(_.writeToLocal(msg.getData))
     }
-  }
-
-  override def channelWritabilityChanged(ctx: ChannelHandlerContext): Unit = {
-    map.foreach(_._2.setAutoRead(ctx.channel().isWritable))
   }
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)

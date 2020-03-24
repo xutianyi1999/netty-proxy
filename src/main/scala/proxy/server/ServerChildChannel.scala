@@ -6,12 +6,11 @@ import io.netty.util.concurrent.GenericFutureListener
 import proxy.LocalTransportFactory
 import proxy.common.Commons
 
-class ServerChildChannel(isWriteable: Boolean, write: (ByteBuf, Channel) => Unit, closeListener: () => Unit) {
+class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () => Unit) {
 
   @volatile private var isInitiativeClose = false
 
   private val channelFuture = LocalTransportFactory.createLocalBootstrap
-    .option[java.lang.Boolean](ChannelOption.AUTO_READ, isWriteable)
     .handler {
       new SimpleChannelInboundHandler[ByteBuf] {
         override def channelInactive(ctx: ChannelHandlerContext): Unit = if (!isInitiativeClose) closeListener()
@@ -44,6 +43,4 @@ class ServerChildChannel(isWriteable: Boolean, write: (ByteBuf, Channel) => Unit
     isInitiativeClose = true
     channel.close()
   }
-
-  def setAutoRead(flag: Boolean): Unit = channel.config().setAutoRead(flag)
 }
