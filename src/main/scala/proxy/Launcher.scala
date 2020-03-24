@@ -19,7 +19,7 @@ object Launcher extends App {
   val trafficShaping = config.getJSONObject("trafficShaping")
 
   Commons.isTrafficShapingEnable = trafficShaping.getBoolean("isEnable")
-  Commons.delay = trafficShaping.getIntValue("delay")
+  if (Commons.isTrafficShapingEnable) Commons.delay = trafficShaping.getIntValue("delay")
 
   args(0) match {
     case "server" => server()

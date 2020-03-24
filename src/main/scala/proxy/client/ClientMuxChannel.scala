@@ -24,7 +24,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, rc4: RC4) {
 
   def writeToRemoteData(data: => Array[Byte], readChannel: Channel): Unit =
     channelOption.foreach { remoteChannel =>
-      readChannel.writeAndFlush(data)
+      remoteChannel.writeAndFlush(data)
       Commons.trafficShaping(remoteChannel, readChannel, Factory.delay)
     }
 
