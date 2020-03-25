@@ -29,11 +29,9 @@ object Client {
         throw new Exception("Connection pool is empty")
     }
 
-    val initializer: ChannelInitializer[SocketChannel] = socketChannel => {
-      socketChannel.pipeline()
-        .addLast(new ByteArrayEncoder)
-        .addLast(new ClientProxyHandler(() => getClientMuxChannel))
-    }
+    val initializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
+      .addLast(new ByteArrayEncoder)
+      .addLast(new ClientProxyHandler(() => getClientMuxChannel))
 
     Factory.createTcpServerBootstrap
       .childHandler(initializer)

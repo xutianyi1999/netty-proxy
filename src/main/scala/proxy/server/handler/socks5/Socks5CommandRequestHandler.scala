@@ -26,7 +26,6 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
         ctx.writeAndFlush(new DefaultSocks5CommandResponse(res, Socks5AddressType.IPv4))
       }
 
-
       val tcpInitializer: ChannelInitializer[SocketChannel] = socketChannel => {
         val dst = ctx.channel()
 
