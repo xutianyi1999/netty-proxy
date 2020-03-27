@@ -17,15 +17,13 @@ class RC4(password: String) extends Cipher {
   keyGenerator.init(keySize, secureRandom)
   private val key = keyGenerator.generateKey()
 
-  override def getEncryptF: Array[Byte] => Array[Byte] = {
-    val rc4Encrypt = Cipher.getInstance("RC4")
-    rc4Encrypt.init(Cipher.ENCRYPT_MODE, key)
-    rc4Encrypt.doFinal
-  }
+  override def getEncryptF: Array[Byte] => Array[Byte] = init(Cipher.ENCRYPT_MODE)
 
-  override def getDecryptF: Array[Byte] => Array[Byte] = {
-    val rc4Decrypt = Cipher.getInstance("RC4")
-    rc4Decrypt.init(Cipher.DECRYPT_MODE, key)
-    rc4Decrypt.doFinal
+  override def getDecryptF: Array[Byte] => Array[Byte] = init(Cipher.DECRYPT_MODE)
+
+  private def init(mode: Int): Array[Byte] => Array[Byte] = {
+    val rc4Crypt = Cipher.getInstance(name)
+    rc4Crypt.init(mode, key)
+    rc4Crypt.doFinal
   }
 }

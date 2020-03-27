@@ -2,8 +2,8 @@ package proxy.common.crypto
 
 trait Cipher {
 
-  val keySize: Int
   val name: String
+  val keySize: Int
 
   def getEncryptF: Array[Byte] => Array[Byte]
 
