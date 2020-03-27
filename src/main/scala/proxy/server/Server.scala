@@ -7,8 +7,9 @@ import io.netty.handler.codec.DelimiterBasedFrameDecoder
 import io.netty.handler.codec.bytes.{ByteArrayDecoder, ByteArrayEncoder}
 import io.netty.handler.codec.socksx.v5.{Socks5CommandRequestDecoder, Socks5InitialRequestDecoder, Socks5ServerEncoder}
 import io.netty.handler.timeout.ReadTimeoutHandler
-import proxy.common.handler.{ByteArrayToByteBufDecoder, RC4Decrypt, RC4Encrypt}
-import proxy.common.{Commons, Message, RC4}
+import proxy.common.crypto.RC4
+import proxy.common.handler.{ByteArrayToByteBufDecoder, DecryptHandler, EncryptHandler}
+import proxy.common.{Commons, Message}
 import proxy.server.handler.ServerMuxHandler
 import proxy.server.handler.socks5.{Socks5CommandRequestHandler, Socks5InitialRequestHandler}
 import proxy.{Factory, LocalTransportFactory}
@@ -40,8 +41,8 @@ object Server {
       .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, Message.delimiter))
       .addLast(new ByteArrayEncoder)
       .addLast(new ByteArrayDecoder)
-      .addLast(new RC4Encrypt(rc4))
-      .addLast(new RC4Decrypt(rc4))
+      .addLast(new EncryptHandler(rc4))
+      .addLast(new DecryptHandler(rc4))
       .addLast(new ServerMuxHandler) // 多路处理器
 
     Factory.createTcpServerBootstrap

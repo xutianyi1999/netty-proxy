@@ -7,6 +7,7 @@ import io.netty.handler.codec.bytes.ByteArrayEncoder
 import proxy.Factory
 import proxy.client.handler.ClientProxyHandler
 import proxy.common._
+import proxy.common.crypto.RC4
 
 import scala.collection.JavaConverters._
 import scala.util.Random

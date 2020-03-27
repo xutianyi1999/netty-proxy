@@ -10,12 +10,13 @@ import io.netty.util.concurrent.GenericFutureListener
 import proxy.Factory
 import proxy.client.handler.ClientMuxHandler
 import proxy.common._
-import proxy.common.handler.{RC4Decrypt, RC4Encrypt}
+import proxy.common.crypto.Cipher
+import proxy.common.handler.{DecryptHandler, EncryptHandler}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-class ClientMuxChannel(name: String, host: String, port: Int, rc4: RC4) {
+class ClientMuxChannel(name: String, host: String, port: Int, cipher: Cipher) {
 
   private val map: mutable.Map[String, Channel] = new ConcurrentHashMap[String, Channel].asScala
   @volatile private var channelOption = Option.empty[Channel]
@@ -78,8 +79,8 @@ class ClientMuxChannel(name: String, host: String, port: Int, rc4: RC4) {
       .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, Message.delimiter))
       .addLast(new ByteArrayEncoder)
       .addLast(new ByteArrayDecoder)
-      .addLast(new RC4Encrypt(rc4))
-      .addLast(new RC4Decrypt(rc4))
+      .addLast(new EncryptHandler(cipher))
+      .addLast(new DecryptHandler(cipher))
       .addLast(new ClientMuxHandler(disconnectListener, writeToLocal, close))
   }
 
