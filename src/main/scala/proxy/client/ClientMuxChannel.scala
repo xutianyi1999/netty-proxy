@@ -32,7 +32,6 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: Cipher) {
   def writeToRemoteEvent(data: => Array[Byte]): Unit = channelOption.foreach(_.writeAndFlush(data))
 
   def register(channelId: String, channel: Channel): ClientMuxChannel = {
-    channel.config().setAutoRead(channelOption.get.isWritable)
     map.put(channelId, channel)
     this
   }
