@@ -1,6 +1,6 @@
 package proxy.common.crypto
 
-trait Cipher {
+trait CipherTrait {
 
   val name: String
   val keySize: Int

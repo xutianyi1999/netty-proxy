@@ -5,9 +5,9 @@ import java.util
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.MessageToMessageEncoder
 import proxy.common.Message
-import proxy.common.crypto.Cipher
+import proxy.common.crypto.CipherTrait
 
-class EncryptHandler(cipher: Cipher) extends MessageToMessageEncoder[Array[Byte]] {
+class EncryptHandler(cipher: CipherTrait) extends MessageToMessageEncoder[Array[Byte]] {
 
   val encrypt: Array[Byte] => Array[Byte] = cipher.getEncryptF
 

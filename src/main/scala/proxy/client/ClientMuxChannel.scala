@@ -10,13 +10,13 @@ import io.netty.util.concurrent.GenericFutureListener
 import proxy.Factory
 import proxy.client.handler.ClientMuxHandler
 import proxy.common._
-import proxy.common.crypto.Cipher
+import proxy.common.crypto.CipherTrait
 import proxy.common.handler.{DecryptHandler, EncryptHandler}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-class ClientMuxChannel(name: String, host: String, port: Int, cipher: Cipher) {
+class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrait) {
 
   private val map: mutable.Map[String, Channel] = new ConcurrentHashMap[String, Channel].asScala
   @volatile private var channelOption = Option.empty[Channel]

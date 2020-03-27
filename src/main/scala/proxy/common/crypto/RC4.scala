@@ -5,7 +5,7 @@ import java.security.SecureRandom
 
 import javax.crypto.{Cipher, KeyGenerator}
 
-class RC4(password: String) extends Cipher {
+class RC4(password: String) extends CipherTrait {
 
   override val keySize: Int = 40
   override val name: String = "RC4"
