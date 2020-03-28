@@ -8,8 +8,8 @@ class ClientMuxHandler(disconnectListener: () => Unit,
                        close: CloseInfo => Unit) extends SimpleChannelInboundHandler[Array[Byte]] {
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = {
-    close(CloseAll)
     disconnectListener()
+    close(CloseAll)
   }
 
   override def channelRead0(ctx: ChannelHandlerContext, msg: Array[Byte]): Unit = {

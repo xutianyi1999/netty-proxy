@@ -11,26 +11,13 @@ class ClientProxyHandler(getClientMuxChannel: () => ClientMuxChannel) extends Si
 
   private val clientMuxChannel = getClientMuxChannel()
 
-  override def channelActive(ctx: ChannelHandlerContext): Unit =
-    if (clientMuxChannel.isActive) {
-      implicit val channelId: String = ctx
+  override def channelActive(ctx: ChannelHandlerContext): Unit = clientMuxChannel.register(ctx.channel())
 
-      clientMuxChannel
-        .register(channelId, ctx.channel())
-        .writeToRemoteEvent(Message.connectMessageTemplate)
-    } else ctx.close()
-
-  override def channelInactive(ctx: ChannelHandlerContext): Unit = {
-    implicit val channelId: String = ctx
-
-    if (clientMuxChannel.remove(channelId).isDefined) {
-      clientMuxChannel.writeToRemoteEvent(Message.disconnectMessageTemplate)
-    }
-  }
+  override def channelInactive(ctx: ChannelHandlerContext): Unit = clientMuxChannel.remove(ctx)
 
   override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = {
     import proxy.common.Convert.ByteBufConvert.byteBufToByteArray
-    clientMuxChannel.writeToRemoteData(Message.dataMessageTemplate(msg)(ctx), ctx.channel())
+    clientMuxChannel.writeToRemote(Message.dataMessageTemplate(msg)(ctx), ctx.channel())
   }
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)

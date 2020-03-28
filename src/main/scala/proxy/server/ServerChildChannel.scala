@@ -1,15 +1,12 @@
 package proxy.server
 
-import java.util.concurrent.TimeUnit
-
 import io.netty.buffer.ByteBuf
 import io.netty.channel._
-import io.netty.util.concurrent.{GenericFutureListener, ScheduledFuture}
+import io.netty.util.concurrent.GenericFutureListener
 import proxy.LocalTransportFactory
 import proxy.common.Commons
 
-class ServerChildChannel(write: (ByteBuf, Channel, (Runnable, Long, TimeUnit) => ScheduledFuture[_]) => Unit,
-                         closeListener: () => Unit) {
+class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () => Unit) {
 
   private var isInitiativeClose = false
 
@@ -18,7 +15,7 @@ class ServerChildChannel(write: (ByteBuf, Channel, (Runnable, Long, TimeUnit) =>
       new SimpleChannelInboundHandler[ByteBuf] {
         override def channelInactive(ctx: ChannelHandlerContext): Unit = if (!isInitiativeClose) closeListener()
 
-        override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = write(msg, ctx.channel(), ctx.executor().schedule)
+        override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = write(msg, ctx.channel())
 
         override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)
       }

@@ -5,7 +5,6 @@ import java.util.logging.Logger
 
 import io.netty.channel.Channel
 import io.netty.channel.local.LocalAddress
-import io.netty.util.concurrent.ScheduledFuture
 
 object Commons {
 
@@ -23,12 +22,13 @@ object Commons {
   var isTrafficShapingEnable: Boolean = _
   var delay: Int = _
 
-  def trafficShaping(writeChannel: Channel, readChannel: Channel, delayF: (Runnable, Long, TimeUnit) => ScheduledFuture[_]): Unit =
+  def trafficShaping(writeChannel: Channel, readChannel: Channel): Unit =
     if (isTrafficShapingEnable && writeChannel.isActive && readChannel.isActive) {
       val isWriteable = writeChannel.isWritable
 
       if (!isWriteable) {
-        delayF(() => trafficShaping(writeChannel, readChannel, delayF), delay, TimeUnit.MILLISECONDS)
+        val runnable: Runnable = () => trafficShaping(writeChannel, readChannel)
+        readChannel.eventLoop().schedule(runnable, delay, TimeUnit.MILLISECONDS)
       }
       readChannel.config().setAutoRead(isWriteable)
     }

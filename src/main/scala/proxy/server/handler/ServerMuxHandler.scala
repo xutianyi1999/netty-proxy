@@ -1,10 +1,7 @@
 package proxy.server.handler
 
-import java.util.concurrent.TimeUnit
-
 import io.netty.buffer.ByteBuf
 import io.netty.channel.{Channel, ChannelHandlerContext, SimpleChannelInboundHandler}
-import io.netty.util.concurrent.ScheduledFuture
 import proxy.common.{Commons, Message}
 import proxy.server.ServerChildChannel
 
@@ -25,10 +22,10 @@ class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
 
     messageType match {
       case Message.connect =>
-        val write: (ByteBuf, Channel, (Runnable, Long, TimeUnit) => ScheduledFuture[_]) => Unit = (byteBuf, localChannel, delay) => {
+        val write: (ByteBuf, Channel) => Unit = (byteBuf, readChannel) => {
           val data = Message.dataMessageTemplate(byteBuf)
           ctx.writeAndFlush(data)
-          Commons.trafficShaping(ctx.channel(), localChannel, delay)
+          Commons.trafficShaping(ctx.channel(), readChannel)
         }
 
         val disconnectListener: () => Unit = () => {

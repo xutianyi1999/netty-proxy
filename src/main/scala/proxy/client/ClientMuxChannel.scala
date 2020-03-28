@@ -1,9 +1,9 @@
 package proxy.client
 
-import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
+import java.util.concurrent.TimeUnit
 
 import io.netty.channel.socket.SocketChannel
-import io.netty.channel.{Channel, ChannelFuture, ChannelInitializer}
+import io.netty.channel.{Channel, ChannelFuture, ChannelInitializer, EventLoop}
 import io.netty.handler.codec.DelimiterBasedFrameDecoder
 import io.netty.handler.codec.bytes.{ByteArrayDecoder, ByteArrayEncoder}
 import io.netty.util.concurrent.GenericFutureListener
@@ -13,60 +13,76 @@ import proxy.common._
 import proxy.common.crypto.CipherTrait
 import proxy.common.handler.{DecryptHandler, EncryptHandler}
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrait) {
 
-  private val map: mutable.Map[String, Channel] = new ConcurrentHashMap[String, Channel].asScala
+  private val map: mutable.Map[String, Channel] = mutable.Map.empty[String, Channel]
+  private val eventLoop: EventLoop = Factory.getEventLoop
   @volatile private var channelOption = Option.empty[Channel]
 
   def isActive: Boolean = channelOption.isDefined
 
-  def writeToRemoteData(data: => Array[Byte], readChannel: Channel): Unit =
+  def writeToRemote(data: => Array[Byte], readChannel: Channel): Unit =
     channelOption.foreach { remoteChannel =>
       remoteChannel.writeAndFlush(data)
-      Commons.trafficShaping(remoteChannel, readChannel, Factory.delay)
+      Commons.trafficShaping(remoteChannel, readChannel)
     }
 
-  def writeToRemoteEvent(data: => Array[Byte]): Unit = channelOption.foreach(_.writeAndFlush(data))
+  import proxy.common.Convert.ChannelIdConvert._
 
-  def register(channelId: String, channel: Channel): ClientMuxChannel = {
-    map.put(channelId, channel)
-    this
+  def register(localChannel: Channel): Unit = eventLoop.execute { () =>
+    implicit val localChannelId: String = localChannel
+
+    channelOption match {
+      case Some(channel) =>
+        map.put(localChannelId, localChannel)
+        channel.writeAndFlush(Message.connectMessageTemplate)
+
+      case None => localChannel.close()
+    }
   }
 
-  def remove(channelId: String): Option[Channel] = map.remove(channelId)
+  def remove(channelId: String): Unit = eventLoop.execute { () =>
+    if (map.remove(channelId).isDefined) {
+      channelOption.foreach(_.writeAndFlush(Message.disconnectMessageTemplate(channelId)))
+    }
+  }
 
-  private val writeToLocal: (String, => Array[Byte]) => Unit = (channelId, data) => {
+  private val writeToLocal: (String, => Array[Byte]) => Unit = (channelId, data) => eventLoop.execute { () =>
     map.get(channelId).foreach(_.writeAndFlush(data))
   }
 
-  private val close: CloseInfo => Unit = {
-    case CloseAll =>
-      val values = map.values
-      map.clear()
-      values.foreach(_.close())
+  private val close: CloseInfo => Unit = closeInfo => eventLoop.execute { () =>
+    closeInfo match {
+      case CloseAll =>
+        val values = map.values
+        map.clear()
+        values.foreach(_.close())
 
-    case CloseOne(channelId) => remove(channelId).foreach(_.close())
+      case CloseOne(channelId) => map.remove(channelId).foreach(_.close())
+    }
   }
 
   private val bootstrap = Factory.createTcpBootstrap
 
-  val connectListener: GenericFutureListener[ChannelFuture] = future =>
-    if (future.isSuccess) {
-      Commons.log.info(s"$name connected")
-      channelOption = Option(future.channel())
-    } else {
-      Commons.log.severe(future.cause().getMessage)
-      connect()
+  private val connectListener: GenericFutureListener[ChannelFuture] = future =>
+    eventLoop.execute { () =>
+      if (future.isSuccess) {
+        Commons.log.info(s"$name connected")
+        channelOption = Option(future.channel())
+      } else {
+        Commons.log.severe(future.cause().getMessage)
+        connect()
+      }
     }
 
-  private def connect(): Unit = Factory.delay.curried { () =>
-    bootstrap.connect(host, port).addListener(connectListener)
-  }(3)(TimeUnit.SECONDS)
+  private def connect(): Unit = eventLoop.schedule(() =>
+    bootstrap.connect(host, port).addListener(connectListener),
+    3, TimeUnit.SECONDS
+  )
 
-  private val disconnectListener = () => {
+  private val disconnectListener = () => eventLoop.execute { () =>
     Commons.log.severe(s"$name disconnected")
     channelOption = Option.empty
     connect()
@@ -84,5 +100,5 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
   }
 
   bootstrap.handler(clientInitializer)
-  connect()
+    .connect(host, port).addListener(connectListener)
 }
