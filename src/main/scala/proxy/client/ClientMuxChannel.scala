@@ -67,14 +67,12 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
   private val bootstrap = Factory.createTcpBootstrap
 
   private val connectListener: GenericFutureListener[ChannelFuture] = future =>
-    eventLoop.execute { () =>
-      if (future.isSuccess) {
-        Commons.log.info(s"$name connected")
-        channelOption = Option(future.channel())
-      } else {
-        Commons.log.severe(future.cause().getMessage)
-        connect()
-      }
+    if (future.isSuccess) {
+      Commons.log.info(s"$name connected")
+      eventLoop.execute(() => channelOption = Option(future.channel()))
+    } else {
+      Commons.log.severe(future.cause().getMessage)
+      connect()
     }
 
   private def connect(): Unit = eventLoop.schedule(() =>

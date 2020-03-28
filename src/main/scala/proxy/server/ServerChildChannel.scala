@@ -33,13 +33,12 @@ class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () =>
 
   channelFuture.addListener(connectListener)
 
-  def writeToLocal(msg: Array[Byte]): Unit =
-    channel.eventLoop().execute { () =>
-      if (channel.isActive)
-        channel.writeAndFlush(msg)
-      else
-        channel.write(msg)
-    }
+  def writeToLocal(msg: Array[Byte]): Unit = channel.eventLoop().execute { () =>
+    if (channel.isActive)
+      channel.writeAndFlush(msg)
+    else
+      channel.write(msg)
+  }
 
   def close(): Unit = channel.eventLoop().execute { () =>
     isInitiativeClose = true
