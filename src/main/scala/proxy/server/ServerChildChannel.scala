@@ -1,21 +1,24 @@
 package proxy.server
 
+import java.util.concurrent.TimeUnit
+
 import io.netty.buffer.ByteBuf
 import io.netty.channel._
-import io.netty.util.concurrent.GenericFutureListener
+import io.netty.util.concurrent.{GenericFutureListener, ScheduledFuture}
 import proxy.LocalTransportFactory
 import proxy.common.Commons
 
-class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () => Unit) {
+class ServerChildChannel(write: (ByteBuf, Channel, (Runnable, Long, TimeUnit) => ScheduledFuture[_]) => Unit,
+                         closeListener: () => Unit) {
 
-  @volatile private var isInitiativeClose = false
+  private var isInitiativeClose = false
 
   private val channelFuture = LocalTransportFactory.createLocalBootstrap
     .handler {
       new SimpleChannelInboundHandler[ByteBuf] {
         override def channelInactive(ctx: ChannelHandlerContext): Unit = if (!isInitiativeClose) closeListener()
 
-        override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = write(msg, ctx.channel())
+        override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = write(msg, ctx.channel(), ctx.executor().schedule)
 
         override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)
       }
@@ -34,12 +37,14 @@ class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () =>
   channelFuture.addListener(connectListener)
 
   def writeToLocal(msg: Array[Byte]): Unit =
-    if (channel.isActive)
-      channel.writeAndFlush(msg)
-    else
-      channel.write(msg)
+    channel.eventLoop().execute { () =>
+      if (channel.isActive)
+        channel.writeAndFlush(msg)
+      else
+        channel.write(msg)
+    }
 
-  def close(): Unit = {
+  def close(): Unit = channel.eventLoop().execute { () =>
     isInitiativeClose = true
     channel.close()
   }

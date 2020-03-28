@@ -32,7 +32,7 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
         val handler = new InboundHandler(dst) {
           override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
             dst.writeAndFlush(msg)
-            Commons.trafficShaping(dst, ctx.channel(), Factory.delay)
+            Commons.trafficShaping(dst, ctx.channel(), ctx.executor().schedule)
           }
         }
 
