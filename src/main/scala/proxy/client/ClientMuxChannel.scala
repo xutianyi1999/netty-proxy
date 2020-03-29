@@ -34,10 +34,12 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
   def register(localChannel: Channel): Unit = {
     channelOption match {
       case Some(remoteChannel) => remoteChannel.eventLoop().execute { () =>
-        implicit val localChannelId: String = localChannel
+        if (remoteChannel.isActive) {
+          implicit val localChannelId: String = localChannel
 
-        map.put(localChannelId, localChannel)
-        remoteChannel.writeAndFlush(Message.connectMessageTemplate)
+          map.put(localChannelId, localChannel)
+          remoteChannel.writeAndFlush(Message.connectMessageTemplate)
+        } else localChannel.close()
       }
 
       case None => localChannel.close()
