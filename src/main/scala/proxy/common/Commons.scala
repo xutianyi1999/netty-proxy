@@ -5,15 +5,15 @@ import java.util.logging.Logger
 
 import io.netty.channel.Channel
 import io.netty.channel.local.LocalAddress
-import io.netty.handler.timeout.ReadTimeoutException
 
 object Commons {
 
   val localAddress = new LocalAddress("local")
   val log: Logger = Logger.getGlobal
 
-  def printError(cause: Throwable): Unit = if (!cause.isInstanceOf[ReadTimeoutException]) {
-    log.severe(cause.getMessage)
+  def printError(cause: Throwable): Unit = {
+    val msg = cause.getMessage
+    if (msg != null) log.severe(msg)
   }
 
   def autoClose[A <: AutoCloseable, B](closeable: A)(fun: A ⇒ B): B = {
