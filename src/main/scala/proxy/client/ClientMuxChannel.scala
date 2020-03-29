@@ -1,6 +1,6 @@
 package proxy.client
 
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.{Channel, ChannelFuture, ChannelInitializer}
@@ -13,11 +13,12 @@ import proxy.common._
 import proxy.common.crypto.CipherTrait
 import proxy.common.handler.{DecryptHandler, EncryptHandler}
 
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrait) {
 
-  private val map: mutable.Map[String, Channel] = mutable.Map.empty[String, Channel]
+  private val map: mutable.Map[String, Channel] = new ConcurrentHashMap[String, Channel].asScala
   @volatile private var channelOption = Option.empty[Channel]
 
   def isActive: Boolean = channelOption.isDefined
@@ -43,14 +44,8 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
     }
   }
 
-  def remove(channelId: String): Unit = {
-    channelOption.foreach { remoteChannel =>
-      remoteChannel.eventLoop().execute { () =>
-        if (map.remove(channelId).isDefined) {
-          remoteChannel.writeAndFlush(Message.disconnectMessageTemplate(channelId))
-        }
-      }
-    }
+  def remove(channelId: String): Unit = if (map.remove(channelId).isDefined) {
+    channelOption.foreach(_.writeAndFlush(Message.disconnectMessageTemplate(channelId)))
   }
 
   private val writeToLocal: (String, => Array[Byte]) => Unit = (channelId, data) => {
