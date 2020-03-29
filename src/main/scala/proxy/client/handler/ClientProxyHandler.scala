@@ -20,5 +20,5 @@ class ClientProxyHandler(getClientMuxChannel: () => ClientMuxChannel) extends Si
     clientMuxChannel.writeToRemote(Message.dataMessageTemplate(msg)(ctx), ctx.channel())
   }
 
-  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)
+  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.printError(cause)
 }

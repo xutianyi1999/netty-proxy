@@ -31,10 +31,10 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
   import proxy.common.Convert.ChannelIdConvert._
 
   def register(localChannel: Channel): Unit = {
-    implicit val localChannelId: String = localChannel
-
     channelOption match {
       case Some(remoteChannel) => remoteChannel.eventLoop().execute { () =>
+        implicit val localChannelId: String = localChannel
+
         map.put(localChannelId, localChannel)
         remoteChannel.writeAndFlush(Message.connectMessageTemplate)
       }
@@ -44,10 +44,10 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
   }
 
   def remove(channelId: String): Unit = {
-    channelOption.foreach {
-      _.eventLoop().execute { () =>
+    channelOption.foreach { remoteChannel =>
+      remoteChannel.eventLoop().execute { () =>
         if (map.remove(channelId).isDefined) {
-          channelOption.foreach(_.writeAndFlush(Message.disconnectMessageTemplate(channelId)))
+          remoteChannel.writeAndFlush(Message.disconnectMessageTemplate(channelId))
         }
       }
     }

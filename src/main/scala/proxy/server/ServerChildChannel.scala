@@ -17,7 +17,7 @@ class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () =>
 
         override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = write(msg, ctx.channel())
 
-        override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)
+        override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.printError(cause)
       }
     }.connect(Commons.localAddress)
 

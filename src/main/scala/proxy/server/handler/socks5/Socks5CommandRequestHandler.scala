@@ -55,7 +55,7 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
 
     override def channelInactive(ctx: ChannelHandlerContext): Unit = dst.close()
 
-    override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.log.severe(cause.getMessage)
+    override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.printError(cause)
   }
 
 }
