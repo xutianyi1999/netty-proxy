@@ -70,7 +70,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
       Commons.log.info(s"$name connected")
       channelOption = Option(future.channel())
     } else {
-      Commons.log.severe(future.cause().getMessage)
+      Commons.printError(future.cause())
       connect()
     }
 
