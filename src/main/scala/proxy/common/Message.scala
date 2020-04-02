@@ -10,7 +10,7 @@ object Message {
 
   val delimiter: Array[Byte] = "🍔🍟".getBytes(StandardCharsets.UTF_8)
 
-  import proxy.common.Convert.ArrayConvert
+  import proxy.common.Convert.MessageConvert
 
   def connectMessageTemplate(implicit channelId: String): Array[Byte] = {
     Array[Byte](connect) - channelId

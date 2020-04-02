@@ -19,18 +19,20 @@ object Convert {
     implicit def channelToChannelId(ctx: ChannelHandlerContext): String = ctx.channel()
   }
 
-  implicit class ArrayConvert(array: Array[Byte]) {
-
-    def -(str: String): Array[Byte] = array ++ str.getBytes(StandardCharsets.UTF_8)
-  }
-
   implicit class MessageConvert(msg: Array[Byte]) {
+
+    def -(str: String): Array[Byte] = msg ++ str.getBytes(StandardCharsets.UTF_8)
 
     def getMessageType: Byte = msg(0)
 
     def getChannelId: String = new String(msg.slice(1, 9), StandardCharsets.UTF_8)
 
     def getData: Array[Byte] = msg.slice(9, msg.length)
+  }
+
+  implicit class ChannelImplicit(channel: Channel) {
+
+    def safeClose(): Unit = if (channel.isOpen) channel.close()
   }
 
 }

@@ -51,9 +51,11 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
 
   class InboundHandler(dst: Channel) extends ChannelInboundHandlerAdapter {
 
+    import proxy.common.Convert.ChannelImplicit
+
     override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = dst.writeAndFlush(msg)
 
-    override def channelInactive(ctx: ChannelHandlerContext): Unit = dst.close()
+    override def channelInactive(ctx: ChannelHandlerContext): Unit = dst.safeClose()
 
     override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.printError(cause)
   }

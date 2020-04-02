@@ -30,6 +30,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
     }
 
   import proxy.common.Convert.ChannelIdConvert._
+  import proxy.common.Convert.ChannelImplicit
 
   def register(localChannel: Channel): Unit =
     channelOption match {
@@ -39,10 +40,10 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
 
           map.put(localChannelId, localChannel)
           remoteChannel.writeAndFlush(Message.connectMessageTemplate)
-        } else localChannel.close()
+        } else localChannel.safeClose()
       }
 
-      case None => localChannel.close()
+      case None => localChannel.safeClose()
     }
 
   def remove(channelId: String): Unit = if (map.remove(channelId).isDefined) {
@@ -57,9 +58,9 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
     case CloseAll =>
       val values = map.values
       map.clear()
-      values.foreach(_.close())
+      values.foreach(_.safeClose())
 
-    case CloseOne(channelId) => map.remove(channelId).foreach(_.close())
+    case CloseOne(channelId) => map.remove(channelId).foreach(_.safeClose())
   }
 
   private val bootstrap = Factory.createTcpBootstrap

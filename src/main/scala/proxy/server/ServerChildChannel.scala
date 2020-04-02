@@ -48,7 +48,8 @@ class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () =>
   }
 
   def close(): Unit = {
+    import proxy.common.Convert.ChannelImplicit
     isInitiativeClose = true
-    if (channel.isOpen) channel.close()
+    channel.safeClose()
   }
 }
