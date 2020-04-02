@@ -49,6 +49,6 @@ class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () =>
 
   def close(): Unit = {
     isInitiativeClose = true
-    channel.close()
+    if (channel.isOpen) channel.close()
   }
 }
