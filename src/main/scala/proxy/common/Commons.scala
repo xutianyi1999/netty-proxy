@@ -5,6 +5,7 @@ import java.util.logging.Logger
 
 import io.netty.channel.Channel
 import io.netty.channel.local.LocalAddress
+import io.netty.util.internal.StringUtil
 
 object Commons {
 
@@ -13,7 +14,7 @@ object Commons {
 
   def printError(cause: Throwable): Unit = {
     val msg = cause.getMessage
-    if (msg != null) log.severe(msg)
+    if (!StringUtil.isNullOrEmpty(msg)) log.severe(msg)
   }
 
   def autoClose[A <: AutoCloseable, B](closeable: A)(fun: A ⇒ B): B = {
