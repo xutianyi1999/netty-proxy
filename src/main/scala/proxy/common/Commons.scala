@@ -1,15 +1,15 @@
 package proxy.common
 
+import java.net.SocketAddress
 import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
 
 import io.netty.channel.Channel
-import io.netty.channel.local.LocalAddress
 import io.netty.util.internal.StringUtil
 
 object Commons {
 
-  val localAddress = new LocalAddress("local")
+  var localAddress: SocketAddress = _
   val log: Logger = Logger.getGlobal
 
   def printError(cause: Throwable): Unit = {

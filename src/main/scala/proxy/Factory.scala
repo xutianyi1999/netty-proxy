@@ -33,5 +33,13 @@ object Factory {
     .group(bossGroup, workerGroup)
     .channel(serverSocketChannel)
 
+  def createLocalBootstrap: Bootstrap = new Bootstrap()
+    .group(workerGroup)
+    .channel(socketChannel)
+
+  def createLocalServerBootstrap: ServerBootstrap = new ServerBootstrap()
+    .group(bossGroup, workerGroup)
+    .channel(serverSocketChannel)
+
   val delay: (Runnable, Long, TimeUnit) => ScheduledFuture[_] = workerGroup.schedule
 }
