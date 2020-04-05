@@ -48,16 +48,15 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
     } else {
       ctx.writeAndFlush(new DefaultSocks5CommandResponse(Socks5CommandStatus.COMMAND_UNSUPPORTED, Socks5AddressType.IPv4))
     }
+}
 
-  class InboundHandler(dst: Channel) extends ChannelInboundHandlerAdapter {
+class InboundHandler(dst: Channel) extends ChannelInboundHandlerAdapter {
 
-    import proxy.common.Convert.ChannelImplicit
+  import proxy.common.Convert.ChannelImplicit
 
-    override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = dst.writeAndFlush(msg)
+  override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = dst.writeAndFlush(msg)
 
-    override def channelInactive(ctx: ChannelHandlerContext): Unit = dst.safeClose()
+  override def channelInactive(ctx: ChannelHandlerContext): Unit = dst.safeClose()
 
-    override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.printError(cause)
-  }
-
+  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.printError(cause)
 }
