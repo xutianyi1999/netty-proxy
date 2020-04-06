@@ -80,7 +80,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
   )
 
   private val disconnectListener = () => {
-    Commons.log.severe(s"$name disconnected")
+    Commons.log.error(s"$name disconnected")
     channelOption = Option.empty
     connect()
   }
