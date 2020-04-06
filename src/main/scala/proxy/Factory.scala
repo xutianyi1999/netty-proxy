@@ -27,7 +27,7 @@ object Factory {
         classOf[EpollDomainSocketChannel]
       )
     } else {
-      Commons.localAddress = new InetSocketAddress(20001)
+      Commons.localAddress = new InetSocketAddress("127.0.0.1", 20001)
       val (serverSocketChannel, socketChannel) = classOf[NioServerSocketChannel] -> classOf[NioSocketChannel]
 
       (
