@@ -1,7 +1,7 @@
 package proxy.server
 
 import io.netty.channel.ChannelInitializer
-import io.netty.channel.socket.SocketChannel
+import io.netty.channel.socket.{DuplexChannel, SocketChannel}
 import io.netty.handler.codec.DelimiterBasedFrameDecoder
 import io.netty.handler.codec.bytes.{ByteArrayDecoder, ByteArrayEncoder}
 import io.netty.handler.codec.socksx.v5.{Socks5CommandRequestDecoder, Socks5InitialRequestDecoder, Socks5ServerEncoder}
@@ -18,19 +18,17 @@ object Server {
   def start(listen: Int, key: String, readTimeOut: Int): Unit = {
     Commons.readTimeOut = readTimeOut
 
-    val localInitializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
+    val localInitializer: ChannelInitializer[DuplexChannel] = socketChannel => socketChannel.pipeline()
       .addLast(Socks5ServerEncoder.DEFAULT)
       .addLast(new Socks5InitialRequestDecoder)
       .addLast(Socks5InitialRequestHandler)
       .addLast(new Socks5CommandRequestDecoder)
       .addLast(Socks5CommandRequestHandler)
 
-    Commons.localAddress = Factory.createLocalServerBootstrap
+    Factory.createLocalServerBootstrap
       .childHandler(localInitializer)
-      .bind(0)
+      .bind(Commons.localAddress)
       .sync()
-      .channel()
-      .localAddress()
 
     import proxy.common.Convert.ByteBufConvert.byteArrayToByteBuf
 
