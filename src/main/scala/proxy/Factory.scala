@@ -16,7 +16,7 @@ object Factory {
   private val (bossGroup, workerGroup, serverSocketChannel, socketChannel, localServerSocketChannel, localSocketChannel) =
     if (Epoll.isAvailable) {
       Commons.log.info("Epoll transport")
-      Commons.localAddress = new DomainSocketAddress("netty-proxy-local-address")
+      Commons.localAddress = new DomainSocketAddress("netty-proxy-domain-address")
 
       (
         new EpollEventLoopGroup(),
