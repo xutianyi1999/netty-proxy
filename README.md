@@ -20,8 +20,8 @@ socks5 代理
 - key: 密钥
 - readTimeout: 读取超时连接中断时间(秒)
 - trafficShaping: 流控
-- lowWaterMark: 低水位线
-- highWaterMark: 高水位线
+- lowWaterMark: 低水位线(字节)
+- highWaterMark: 高水位线(字节)
 - delay: 检测间隔(毫秒)
 
 ### Client
