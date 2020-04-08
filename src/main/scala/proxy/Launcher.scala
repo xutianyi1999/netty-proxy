@@ -4,6 +4,7 @@ import java.io.FileInputStream
 import java.nio.charset.StandardCharsets
 
 import com.alibaba.fastjson.{JSON, JSONObject}
+import io.netty.channel.WriteBufferWaterMark
 import proxy.client.Client
 import proxy.common.Commons
 import proxy.server.Server
@@ -19,7 +20,15 @@ object Launcher extends App {
   val trafficShaping = config.getJSONObject("trafficShaping")
 
   Commons.isTrafficShapingEnable = trafficShaping.getBoolean("isEnable")
-  if (Commons.isTrafficShapingEnable) Commons.delay = trafficShaping.getIntValue("delay")
+
+  if (Commons.isTrafficShapingEnable) {
+    Commons.delay = trafficShaping.getIntValue("delay")
+
+    Commons.waterMark = new WriteBufferWaterMark(
+      trafficShaping.getIntValue("lowWaterMark"),
+      trafficShaping.getIntValue("heightWaterMark")
+    )
+  }
 
   args(0) match {
     case "server" => server()

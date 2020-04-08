@@ -9,7 +9,7 @@ import org.slf4j.{Logger, LoggerFactory}
 
 object Commons {
 
-  val waterMark = new WriteBufferWaterMark(479232, 512000)
+  var waterMark = new WriteBufferWaterMark(479232, 512000)
   var localAddress: SocketAddress = _
   val log: Logger = LoggerFactory.getLogger("netty-proxy")
 
