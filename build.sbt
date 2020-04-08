@@ -10,8 +10,11 @@ libraryDependencies += "io.netty" % "netty-all" % "4.1.48.Final"
 // https://mvnrepository.com/artifact/com.alibaba/fastjson
 libraryDependencies += "com.alibaba" % "fastjson" % "1.2.67"
 
-// https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
-libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30"
+// https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.30"
+
+// https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12
+libraryDependencies += "org.slf4j" % "slf4j-log4j12" % "1.7.30"
 
 scalacOptions ++= Seq(
   "-encoding", "utf8",
