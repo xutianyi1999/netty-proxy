@@ -1,7 +1,7 @@
 package proxy.server
 
-import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.{DuplexChannel, SocketChannel}
+import io.netty.channel.{ChannelInitializer, ChannelOption, WriteBufferWaterMark}
 import io.netty.handler.codec.DelimiterBasedFrameDecoder
 import io.netty.handler.codec.bytes.{ByteArrayDecoder, ByteArrayEncoder}
 import io.netty.handler.codec.socksx.v5.{Socks5CommandRequestDecoder, Socks5InitialRequestDecoder, Socks5ServerEncoder}
@@ -26,6 +26,7 @@ object Server {
       .addLast(Socks5CommandRequestHandler)
 
     Factory.createLocalServerBootstrap
+      .childOption[WriteBufferWaterMark](ChannelOption.WRITE_BUFFER_WATER_MARK, Commons.waterMark)
       .childHandler(localInitializer)
       .bind(Commons.localAddress)
       .sync()
@@ -44,6 +45,7 @@ object Server {
       .addLast(new ServerMuxHandler) // 多路处理器
 
     Factory.createTcpServerBootstrap
+      .childOption[WriteBufferWaterMark](ChannelOption.WRITE_BUFFER_WATER_MARK, Commons.waterMark)
       .childHandler(tcpInitializer)
       .bind(listen)
       .sync()

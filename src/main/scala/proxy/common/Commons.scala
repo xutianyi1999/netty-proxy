@@ -3,12 +3,13 @@ package proxy.common
 import java.net.SocketAddress
 import java.util.concurrent.TimeUnit
 
-import io.netty.channel.Channel
+import io.netty.channel.{Channel, WriteBufferWaterMark}
 import io.netty.util.internal.StringUtil
 import org.slf4j.{Logger, LoggerFactory}
 
 object Commons {
 
+  val waterMark = new WriteBufferWaterMark(479232, 512000)
   var localAddress: SocketAddress = _
   val log: Logger = LoggerFactory.getLogger("netty-proxy")
 
@@ -17,7 +18,7 @@ object Commons {
     if (!StringUtil.isNullOrEmpty(msg)) log.error(msg)
   }
 
-  def autoClose[A <: AutoCloseable, B](closeable: A)(fun: A ⇒ B): B = {
+  def autoClose[A <: AutoCloseable, B](closeable: A)(fun: A => B): B = {
     try fun(closeable)
     finally closeable.close()
   }

@@ -2,8 +2,8 @@ package proxy.client
 
 import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 
+import io.netty.channel._
 import io.netty.channel.socket.SocketChannel
-import io.netty.channel.{Channel, ChannelFuture, ChannelInitializer}
 import io.netty.handler.codec.DelimiterBasedFrameDecoder
 import io.netty.handler.codec.bytes.{ByteArrayDecoder, ByteArrayEncoder}
 import io.netty.util.concurrent.GenericFutureListener
@@ -64,6 +64,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
   }
 
   private val bootstrap = Factory.createTcpBootstrap
+    .option[WriteBufferWaterMark](ChannelOption.WRITE_BUFFER_WATER_MARK, Commons.waterMark)
 
   private val connectListener: GenericFutureListener[ChannelFuture] = future =>
     if (future.isSuccess) {
