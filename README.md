@@ -10,6 +10,8 @@ socks5 代理
   "readTimeout": 300,
   "trafficShaping": {
     "isEnable": true,
+    "lowWaterMark": 479232,
+    "highWaterMark": 512000,
     "delay": 100
   }
 }
@@ -18,6 +20,8 @@ socks5 代理
 - key: 密钥
 - readTimeout: 读取超时连接中断时间(秒)
 - trafficShaping: 流控
+- lowWaterMark: 低水位线
+- highWaterMark: 高水位线
 - delay: 检测间隔(毫秒)
 
 ### Client
@@ -40,6 +44,8 @@ socks5 代理
   },
   "trafficShaping": {
     "isEnable": true,
+    "lowWaterMark": 479232,
+    "highWaterMark": 512000,
     "delay": 100
   }
 }

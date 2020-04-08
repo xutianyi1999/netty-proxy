@@ -26,7 +26,7 @@ object Launcher extends App {
 
     Commons.waterMark = new WriteBufferWaterMark(
       trafficShaping.getIntValue("lowWaterMark"),
-      trafficShaping.getIntValue("heightWaterMark")
+      trafficShaping.getIntValue("highWaterMark")
     )
   }
 
