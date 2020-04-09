@@ -9,9 +9,9 @@ import io.netty.util.concurrent.GenericFutureListener
 import proxy.Factory
 import proxy.common.Commons
 
-class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () => Unit) {
+class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () => Unit, eventLoop: EventLoop) {
 
-  @volatile private var isInitiativeClose = false
+  private var isInitiativeClose = false
 
   private val localInitializer: ChannelInitializer[DuplexChannel] = socketChannel => socketChannel.pipeline()
     .addLast(new ReadTimeoutHandler(Commons.readTimeOut))
@@ -26,7 +26,7 @@ class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () =>
       }
     }
 
-  private val channelFuture = Factory.createLocalBootstrap
+  private val channelFuture = Factory.createLocalBootstrap(eventLoop)
     .handler(localInitializer)
     .connect(Commons.localAddress)
 
@@ -42,19 +42,11 @@ class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () =>
 
   channelFuture.addListener(connectListener)
 
-  def writeToLocal(msg: Array[Byte]): Unit = {
-    def f(f2: () => Unit): Unit =
-      if (channel.isActive)
-        channel.writeAndFlush(msg)
-      else
-        f2()
-
-    f { () =>
-      channel.eventLoop().execute { () =>
-        f(() => channel.write(msg))
-      }
-    }
-  }
+  def writeToLocal(msg: Array[Byte]): Unit =
+    if (channel.isActive)
+      channel.writeAndFlush(msg)
+    else
+      channel.write(msg)
 
   def close(): Unit = {
     import proxy.common.Convert.ChannelImplicit

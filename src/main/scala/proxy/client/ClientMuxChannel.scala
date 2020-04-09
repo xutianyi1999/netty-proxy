@@ -63,7 +63,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
     case CloseOne(channelId) => map.remove(channelId).foreach(_.safeClose())
   }
 
-  private val bootstrap = Factory.createTcpBootstrap
+  private val bootstrap = Factory.createTcpBootstrap()
     .option[WriteBufferWaterMark](ChannelOption.WRITE_BUFFER_WATER_MARK, Commons.waterMark)
 
   private val connectListener: GenericFutureListener[ChannelFuture] = future =>

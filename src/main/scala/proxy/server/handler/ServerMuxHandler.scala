@@ -1,18 +1,15 @@
 package proxy.server.handler
 
-import java.util.concurrent.ConcurrentHashMap
-
 import io.netty.buffer.ByteBuf
 import io.netty.channel.{Channel, ChannelHandlerContext, SimpleChannelInboundHandler}
 import proxy.common.{Commons, Message}
 import proxy.server.ServerChildChannel
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
 
-  private val map: mutable.Map[String, ServerChildChannel] = new ConcurrentHashMap[String, ServerChildChannel].asScala
+  private val map: mutable.Map[String, ServerChildChannel] = mutable.Map.empty
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = map.values.foreach(_.close())
 
@@ -36,7 +33,7 @@ class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
           ctx.writeAndFlush(Message.disconnectMessageTemplate)
         }
 
-        val childChannel = new ServerChildChannel(write, disconnectListener)
+        val childChannel = new ServerChildChannel(write, disconnectListener, ctx.channel().eventLoop())
         map.put(remoteChannelId, childChannel)
 
       case Message.disconnect => map.remove(remoteChannelId).foreach(_.close())

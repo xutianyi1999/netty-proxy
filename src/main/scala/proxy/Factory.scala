@@ -4,6 +4,7 @@ import java.net.InetSocketAddress
 import java.util.concurrent.TimeUnit
 
 import io.netty.bootstrap.{Bootstrap, ServerBootstrap}
+import io.netty.channel.EventLoopGroup
 import io.netty.channel.epoll._
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.{NioServerSocketChannel, NioSocketChannel}
@@ -40,16 +41,16 @@ object Factory {
       )
     }
 
-  def createTcpBootstrap: Bootstrap = new Bootstrap()
-    .group(workerGroup)
+  def createTcpBootstrap(eventLoopGroup: EventLoopGroup = workerGroup): Bootstrap = new Bootstrap()
+    .group(eventLoopGroup)
     .channel(socketChannel)
 
   def createTcpServerBootstrap: ServerBootstrap = new ServerBootstrap()
     .group(bossGroup, workerGroup)
     .channel(serverSocketChannel)
 
-  def createLocalBootstrap: Bootstrap = new Bootstrap()
-    .group(workerGroup)
+  def createLocalBootstrap(eventLoopGroup: EventLoopGroup = workerGroup): Bootstrap = new Bootstrap()
+    .group(eventLoopGroup)
     .channel(localSocketChannel)
 
   def createLocalServerBootstrap: ServerBootstrap = new ServerBootstrap()

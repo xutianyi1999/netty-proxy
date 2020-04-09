@@ -41,7 +41,7 @@ object Socks5CommandRequestHandler extends SimpleChannelInboundHandler[DefaultSo
           .addLast(handler)
       }
 
-      Factory.createTcpBootstrap
+      Factory.createTcpBootstrap(ctx.channel().eventLoop())
         .handler(tcpInitializer)
         .connect(msg.dstAddr(), msg.dstPort())
         .addListener(connectListener)
