@@ -10,8 +10,8 @@ socks5 代理
   "readTimeout": 300,
   "trafficShaping": {
     "isEnable": true,
-    "lowWaterMark": 479232,
-    "highWaterMark": 512000,
+    "lowWaterMark": 1048576,
+    "highWaterMark": 3145728,
     "delay": 100
   }
 }
@@ -44,8 +44,8 @@ socks5 代理
   },
   "trafficShaping": {
     "isEnable": true,
-    "lowWaterMark": 479232,
-    "highWaterMark": 512000,
+    "lowWaterMark": 5242880,
+    "highWaterMark": 20971520,
     "delay": 100
   }
 }
