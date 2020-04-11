@@ -23,6 +23,4 @@ class ClientMuxHandler(disconnectListener: () => Unit,
       case Message.data => write(channelId, msg.getData)
     }
   }
-
-  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.printError(cause)
 }

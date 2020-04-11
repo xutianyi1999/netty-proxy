@@ -41,6 +41,4 @@ class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
       case Message.data => map.get(remoteChannelId).foreach(_.writeToLocal(msg.getData))
     }
   }
-
-  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.printError(cause)
 }

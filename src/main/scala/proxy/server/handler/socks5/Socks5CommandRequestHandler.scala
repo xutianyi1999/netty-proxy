@@ -57,6 +57,4 @@ class InboundHandler(dst: Channel) extends ChannelInboundHandlerAdapter {
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = dst.writeAndFlush(msg)
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = dst.safeClose()
-
-  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = Commons.printError(cause)
 }
