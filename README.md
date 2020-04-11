@@ -57,11 +57,11 @@ socks5 代理
 ## Usages
 ### Server
 ```shell script
-java -jar proxy.jar client client-config.json
+java -jar proxy.jar server server-config.json
 ```
 ### Client
 ```shell script
-java -jar proxy.jar server server-config.json
+java -jar proxy.jar client client-config.json
 ```
 ## Compile source code
 ```shell script
