@@ -2,6 +2,7 @@ package proxy.server.handler
 
 import io.netty.buffer.ByteBuf
 import io.netty.channel.{Channel, ChannelHandlerContext, SimpleChannelInboundHandler}
+import proxy.common.`case`.{MessageConnect, MessageData, MessageDisconnect}
 import proxy.common.{Commons, Message}
 import proxy.server.ServerChildChannel
 
@@ -13,32 +14,26 @@ class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = map.values.foreach(_.close())
 
-  override def channelRead0(ctx: ChannelHandlerContext, msg: Array[Byte]): Unit = {
-    import proxy.common.Convert.ByteBufConvert.byteBufToByteArray
-    import proxy.common.Convert.MessageConvert
+  override def channelRead0(ctx: ChannelHandlerContext, msg: Array[Byte]): Unit = Message.messageMatch(msg) {
+    case MessageConnect(remoteChannelId) =>
+      val write: (ByteBuf, Channel) => Unit = (byteBuf, readChannel) => {
+        import proxy.common.Convert.ByteBufConvert.byteBufToByteArray
 
-    val messageType = msg.getMessageType
-    implicit val remoteChannelId: String = msg.getChannelId
+        val data = Message.dataMessageTemplate(byteBuf)(remoteChannelId)
+        ctx.writeAndFlush(data)
+        Commons.trafficShaping(ctx.channel, readChannel)
+      }
 
-    messageType match {
-      case Message.connect =>
-        val write: (ByteBuf, Channel) => Unit = (byteBuf, readChannel) => {
-          val data = Message.dataMessageTemplate(byteBuf)
-          ctx.writeAndFlush(data)
-          Commons.trafficShaping(ctx.channel(), readChannel)
-        }
+      val disconnectListener: () => Unit = () => {
+        map.remove(remoteChannelId)
+        ctx.writeAndFlush(Message.disconnectMessageTemplate(remoteChannelId))
+      }
 
-        val disconnectListener: () => Unit = () => {
-          map.remove(remoteChannelId)
-          ctx.writeAndFlush(Message.disconnectMessageTemplate)
-        }
+      val childChannel = new ServerChildChannel(write, disconnectListener, ctx.channel().eventLoop())
+      map.put(remoteChannelId, childChannel)
 
-        val childChannel = new ServerChildChannel(write, disconnectListener, ctx.channel().eventLoop())
-        map.put(remoteChannelId, childChannel)
+    case MessageDisconnect(remoteChannelId) => map.remove(remoteChannelId).foreach(_.close())
 
-      case Message.disconnect => map.remove(remoteChannelId).foreach(_.close())
-
-      case Message.data => map.get(remoteChannelId).foreach(_.writeToLocal(msg.getData))
-    }
+    case MessageData(remoteChannelId, f) => map.get(remoteChannelId).foreach(_.writeToLocal(f()))
   }
 }

@@ -10,6 +10,7 @@ import io.netty.util.concurrent.GenericFutureListener
 import proxy.Factory
 import proxy.client.handler.ClientMuxHandler
 import proxy.common._
+import proxy.common.`case`.{CloseAll, CloseCase, CloseOne}
 import proxy.common.crypto.CipherTrait
 import proxy.common.handler.{DecryptHandler, EncryptHandler}
 
@@ -54,7 +55,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
     map.get(channelId).foreach(_.writeAndFlush(data))
   }
 
-  private val close: CloseInfo => Unit = {
+  private val close: CloseCase => Unit = {
     case CloseAll =>
       val values = map.values
       map.clear()
