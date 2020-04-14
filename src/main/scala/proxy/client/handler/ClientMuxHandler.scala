@@ -20,8 +20,8 @@ class ClientMuxHandler(disconnectListener: () => Unit,
     case _ =>
   }
 
-  override def userEventTriggered(ctx: ChannelHandlerContext, evt: Object): Unit = evt match {
-    case IdleStateEvent => ctx.writeAndFlush(Message.heartbeatTemplate)
-    case _ =>
-  }
+  override def userEventTriggered(ctx: ChannelHandlerContext, evt: Object): Unit =
+    if (evt.isInstanceOf[IdleStateEvent]) {
+      ctx.writeAndFlush(Message.heartbeatTemplate)
+    }
 }

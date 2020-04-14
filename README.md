@@ -33,13 +33,15 @@ socks5 代理
       "connections": 5,
       "host": "domain name",
       "port": 443,
-      "key": "123"
+      "key": "123",
+      "heartbeatInterval": 60
     },
     "HK": {
       "connections": 5,
       "host": "domain name",
       "port": 443,
-      "key": "123"
+      "key": "123",
+      "heartbeatInterval": 60
     }
   },
   "trafficShaping": {
@@ -53,6 +55,7 @@ socks5 代理
 - listen: 本地socks5协议监听端口
 - US/HK: 节点名称
 - connections: 连接池大小
+- heartbeatInterval: 心跳包间隔(秒)
 
 ## Usages
 ### Server

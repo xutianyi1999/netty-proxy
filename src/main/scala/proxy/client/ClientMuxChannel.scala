@@ -6,6 +6,7 @@ import io.netty.channel._
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.DelimiterBasedFrameDecoder
 import io.netty.handler.codec.bytes.{ByteArrayDecoder, ByteArrayEncoder}
+import io.netty.handler.timeout.IdleStateHandler
 import io.netty.util.concurrent.GenericFutureListener
 import proxy.Factory
 import proxy.client.handler.ClientMuxHandler
@@ -17,7 +18,7 @@ import proxy.common.handler.{DecryptHandler, EncryptHandler}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrait) {
+class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrait, heartbeatInterval: Int) {
 
   private val map: mutable.Map[String, Channel] = new ConcurrentHashMap[String, Channel].asScala
   @volatile private var channelOption = Option.empty[Channel]
@@ -90,6 +91,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
   private val clientInitializer: ChannelInitializer[SocketChannel] = socketChannel => {
     import proxy.common.Convert.ByteBufConvert.byteArrayToByteBuf
     socketChannel.pipeline()
+      .addLast(new IdleStateHandler(0, heartbeatInterval, 0))
       .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, Message.delimiter))
       .addLast(new ByteArrayEncoder)
       .addLast(new ByteArrayDecoder)

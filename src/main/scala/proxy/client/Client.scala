@@ -50,10 +50,11 @@ object Client {
       count = json.getIntValue("connections")
       host = json.getString("host")
       port = json.getIntValue("port")
+      heartbeatInterval = json.getIntValue("heartbeatInterval")
       rc4 = new RC4(json.getString("key"))
 
       id <- 1 to count
-    } yield new ClientMuxChannel(s"${tuple._1}-$id", host, port, rc4)
+    } yield new ClientMuxChannel(s"${tuple._1}-$id", host, port, rc4, heartbeatInterval)
 
     l.toSeq
   }
