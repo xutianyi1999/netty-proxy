@@ -26,6 +26,8 @@ object Message {
     Array[Byte](data) - channelId ++ bytes
   }
 
+  val heartbeatTemplate: Array[Byte] = Array[Byte](heartbeat)
+
   def messageMatch(msg: Array[Byte])(fun: MessageCase => Unit): Unit = {
     val messageType = msg.getMessageType
 
