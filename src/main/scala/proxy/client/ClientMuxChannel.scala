@@ -34,19 +34,18 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
   import proxy.common.Convert.ChannelIdConvert._
   import proxy.common.Convert.ChannelImplicit
 
-  def register(localChannel: Channel): Unit =
-    channelOption match {
-      case Some(remoteChannel) => remoteChannel.eventLoop().execute { () =>
-        if (remoteChannel.isActive) {
-          implicit val localChannelId: String = localChannel
+  def register(localChannel: Channel): Unit = channelOption match {
+    case Some(remoteChannel) => remoteChannel.eventLoop().execute { () =>
+      if (remoteChannel.isActive) {
+        implicit val localChannelId: String = localChannel
 
-          map.put(localChannelId, localChannel)
-          remoteChannel.writeAndFlush(Message.connectMessageTemplate)
-        } else localChannel.safeClose()
-      }
-
-      case None => localChannel.safeClose()
+        map.put(localChannelId, localChannel)
+        remoteChannel.writeAndFlush(Message.connectMessageTemplate)
+      } else localChannel.safeClose()
     }
+
+    case None => localChannel.safeClose()
+  }
 
   def remove(channelId: String): Unit = if (map.remove(channelId).isDefined) {
     channelOption.foreach(_.writeAndFlush(Message.disconnectMessageTemplate(channelId)))
