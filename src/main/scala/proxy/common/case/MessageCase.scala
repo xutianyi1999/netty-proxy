@@ -2,8 +2,8 @@ package proxy.common.`case`
 
 sealed trait MessageCase
 
-case class MessageConnect(channelId: String) extends MessageCase
+case object MessageConnect extends MessageCase
 
-case class MessageDisconnect(channelId: String) extends MessageCase
+case object MessageDisconnect extends MessageCase
 
-case class MessageData(channelId: String, bytes: () => Array[Byte]) extends MessageCase
+final case class MessageData(bytes: () => Array[Byte]) extends MessageCase

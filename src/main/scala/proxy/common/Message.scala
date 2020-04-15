@@ -28,16 +28,16 @@ object Message {
 
   val heartbeatTemplate: Array[Byte] = Array[Byte](heartbeat)
 
-  def messageMatch(msg: Array[Byte])(fun: MessageCase => Unit): Unit = {
+  def messageMatch(msg: Array[Byte])(fun: String => MessageCase => Unit): Unit = {
     val messageType = msg.getMessageType
 
     if (messageType != heartbeat) {
-      val remoteChannelId: String = msg.getChannelId
+      val f2 = fun(msg.getChannelId)
 
       messageType match {
-        case Message.connect => fun(MessageConnect(remoteChannelId))
-        case Message.disconnect => fun(MessageDisconnect(remoteChannelId))
-        case Message.data => fun(MessageData(remoteChannelId, () => msg.getData))
+        case Message.connect => f2(MessageConnect)
+        case Message.disconnect => f2(MessageDisconnect)
+        case Message.data => f2(MessageData(() => msg.getData))
       }
     }
   }

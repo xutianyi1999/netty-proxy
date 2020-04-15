@@ -14,11 +14,12 @@ class ClientMuxHandler(disconnectListener: () => Unit,
     close(CloseAll)
   }
 
-  override def channelRead0(ctx: ChannelHandlerContext, msg: Array[Byte]): Unit = Message.messageMatch(msg) {
-    case MessageDisconnect(channelId) => close(CloseOne(channelId))
-    case MessageData(channelId, f) => write(channelId, f())
-    case _ =>
-  }
+  override def channelRead0(ctx: ChannelHandlerContext, msg: Array[Byte]): Unit =
+    Message.messageMatch(msg)(channelId => {
+      case MessageDisconnect => close(CloseOne(channelId))
+      case MessageData(f) => write(channelId, f())
+      case _ =>
+    })
 
   override def userEventTriggered(ctx: ChannelHandlerContext, evt: Object): Unit =
     if (evt.isInstanceOf[IdleStateEvent]) {
