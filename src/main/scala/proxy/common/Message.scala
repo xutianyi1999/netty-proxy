@@ -10,23 +10,21 @@ object Message {
   val disconnect: Byte = 2
   val data: Byte = 3
   val heartbeat: Byte = 4
+
   val delimiter: Array[Byte] = "🍔🍟".getBytes(StandardCharsets.UTF_8)
+
+  val connectBytes: Array[Byte] = Array[Byte](connect)
+  val disconnectBytes: Array[Byte] = Array[Byte](disconnect)
+  val dataMessageBytes: Array[Byte] = Array[Byte](data)
+  val heartbeatTemplate: Array[Byte] = Array[Byte](heartbeat)
 
   import proxy.common.Convert.MessageConvert
 
-  def connectMessageTemplate(implicit channelId: String): Array[Byte] = {
-    Array[Byte](connect) - channelId
-  }
+  def connectMessageTemplate(implicit channelId: String): Array[Byte] = connectBytes - channelId
 
-  def disconnectMessageTemplate(implicit channelId: String): Array[Byte] = {
-    Array[Byte](disconnect) - channelId
-  }
+  def disconnectMessageTemplate(implicit channelId: String): Array[Byte] = disconnectBytes - channelId
 
-  def dataMessageTemplate(bytes: Array[Byte])(implicit channelId: String): Array[Byte] = {
-    Array[Byte](data) - channelId ++ bytes
-  }
-
-  val heartbeatTemplate: Array[Byte] = Array[Byte](heartbeat)
+  def dataMessageTemplate(bytes: Array[Byte])(implicit channelId: String): Array[Byte] = dataMessageBytes - channelId ++ bytes
 
   def messageMatch(msg: Array[Byte])(fun: String => MessageCase => Unit): Unit = {
     val messageType = msg.getMessageType
