@@ -56,6 +56,6 @@ object Client {
       id <- 1 to count
     } yield new ClientMuxChannel(s"${tuple._1}-$id", host, port, rc4, heartbeatInterval)
 
-    l.toSeq
+    l.toIndexedSeq
   }
 }
