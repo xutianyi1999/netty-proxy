@@ -13,7 +13,7 @@ libraryDependencies += "io.netty" % "netty-handler" % nettyVersion
 libraryDependencies += "io.netty" % "netty-codec-socks" % nettyVersion
 
 // https://mvnrepository.com/artifact/io.netty/netty-transport-native-epoll
-libraryDependencies += "io.netty" % "netty-transport-native-epoll" % nettyVersion
+libraryDependencies += "io.netty" % "netty-transport-native-epoll" % nettyVersion classifier "linux-x86_64"
 
 // https://mvnrepository.com/artifact/com.alibaba/fastjson
 libraryDependencies += "com.alibaba" % "fastjson" % "1.2.68"
