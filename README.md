@@ -12,7 +12,7 @@ socks5 代理
     "isEnable": true,
     "lowWaterMark": 1048576,
     "highWaterMark": 3145728,
-    "delay": 100
+    "delay":300
   }
 }
 ```
@@ -34,21 +34,21 @@ socks5 代理
       "host": "domain name",
       "port": 443,
       "key": "123",
-      "heartbeatInterval": 60
+      "heartbeatInterval": 30
     },
     "HK": {
       "connections": 5,
       "host": "domain name",
       "port": 443,
       "key": "123",
-      "heartbeatInterval": 60
+      "heartbeatInterval": 30
     }
   },
   "trafficShaping": {
     "isEnable": true,
     "lowWaterMark": 5242880,
     "highWaterMark": 20971520,
-    "delay": 100
+    "delay": 300
   }
 }
 ```

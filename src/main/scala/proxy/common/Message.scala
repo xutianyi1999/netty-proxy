@@ -11,7 +11,7 @@ object Message {
   val data: Byte = 3
   val heartbeat: Byte = 4
 
-  val delimiter: Array[Byte] = "🍔🍟".getBytes(StandardCharsets.UTF_8)
+  val delimiter: Array[Byte] = "🍔".getBytes(StandardCharsets.UTF_8)
 
   val connectBytes: Array[Byte] = Array[Byte](connect)
   val disconnectBytes: Array[Byte] = Array[Byte](disconnect)
