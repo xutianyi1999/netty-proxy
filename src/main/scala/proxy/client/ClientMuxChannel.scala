@@ -100,5 +100,6 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
   }
 
   bootstrap.handler(clientInitializer)
-    .connect(host, port).addListener(connectListener)
+    .connect(host, port)
+    .addListener(connectListener)
 }

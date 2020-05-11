@@ -14,13 +14,12 @@ import proxy.common.Commons
 
 object Factory {
 
-  private val (bossGroup, workerGroup, serverSocketChannel, socketChannel, localServerSocketChannel, localSocketChannel) =
+  private val (group, serverSocketChannel, socketChannel, localServerSocketChannel, localSocketChannel) =
     if (Epoll.isAvailable) {
       Commons.log.info("Epoll transport")
       Commons.localAddress = new DomainSocketAddress("netty-proxy-domain-address")
 
       (
-        new EpollEventLoopGroup(),
         new EpollEventLoopGroup(),
         classOf[EpollServerSocketChannel],
         classOf[EpollSocketChannel],
@@ -33,7 +32,6 @@ object Factory {
 
       (
         new NioEventLoopGroup(),
-        new NioEventLoopGroup(),
         serverSocketChannel,
         socketChannel,
         serverSocketChannel,
@@ -41,21 +39,21 @@ object Factory {
       )
     }
 
-  def createTcpBootstrap(eventLoopGroup: EventLoopGroup = workerGroup): Bootstrap = new Bootstrap()
+  def createTcpBootstrap(eventLoopGroup: EventLoopGroup = group): Bootstrap = new Bootstrap()
     .group(eventLoopGroup)
     .channel(socketChannel)
 
   def createTcpServerBootstrap: ServerBootstrap = new ServerBootstrap()
-    .group(bossGroup, workerGroup)
+    .group(group)
     .channel(serverSocketChannel)
 
-  def createLocalBootstrap(eventLoopGroup: EventLoopGroup = workerGroup): Bootstrap = new Bootstrap()
+  def createLocalBootstrap(eventLoopGroup: EventLoopGroup = group): Bootstrap = new Bootstrap()
     .group(eventLoopGroup)
     .channel(localSocketChannel)
 
   def createLocalServerBootstrap: ServerBootstrap = new ServerBootstrap()
-    .group(bossGroup, workerGroup)
+    .group(group)
     .channel(localServerSocketChannel)
 
-  val delay: (Runnable, Long, TimeUnit) => ScheduledFuture[_] = workerGroup.schedule
+  val delay: (Runnable, Long, TimeUnit) => ScheduledFuture[_] = group.schedule
 }
