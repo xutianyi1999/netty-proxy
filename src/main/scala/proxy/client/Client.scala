@@ -21,7 +21,7 @@ object Client {
   private def startClientProxy(listen: Int, remote: JSONObject): Unit = {
     val clientMuxChannelSeq = distribution(remote)
 
-    def getClientMuxChannel: ClientMuxChannel = {
+    val getClientMuxChannel: () => ClientMuxChannel = { () =>
       val seq = clientMuxChannelSeq.filter(_.isActive)
 
       if (seq.nonEmpty)
@@ -32,7 +32,7 @@ object Client {
 
     val initializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
       .addLast(new ByteArrayEncoder)
-      .addLast(new ClientProxyHandler(() => getClientMuxChannel))
+      .addLast(new ClientProxyHandler(getClientMuxChannel))
 
     Factory.createTcpServerBootstrap
       .childHandler(initializer)
