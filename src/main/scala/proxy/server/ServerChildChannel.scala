@@ -3,7 +3,6 @@ package proxy.server
 import io.netty.buffer.ByteBuf
 import io.netty.channel._
 import io.netty.channel.socket.DuplexChannel
-import io.netty.handler.codec.bytes.ByteArrayEncoder
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.util.concurrent.GenericFutureListener
 import proxy.Factory
@@ -15,7 +14,7 @@ class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () =>
 
   private val localInitializer: ChannelInitializer[DuplexChannel] = socketChannel => socketChannel.pipeline()
     .addLast(new ReadTimeoutHandler(Commons.readTimeOut))
-    .addLast(new ByteArrayEncoder)
+    .addLast(Commons.byteArrayEncoder)
     .addLast {
       new SimpleChannelInboundHandler[ByteBuf] {
         override def channelInactive(ctx: ChannelHandlerContext): Unit = if (!isInitiativeClose) closeListener()

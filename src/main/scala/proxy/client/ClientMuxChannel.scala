@@ -5,7 +5,7 @@ import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 import io.netty.channel._
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.DelimiterBasedFrameDecoder
-import io.netty.handler.codec.bytes.{ByteArrayDecoder, ByteArrayEncoder}
+import io.netty.handler.codec.bytes.ByteArrayDecoder
 import io.netty.handler.timeout.IdleStateHandler
 import io.netty.util.concurrent.GenericFutureListener
 import proxy.Factory
@@ -92,7 +92,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
     socketChannel.pipeline()
       .addLast(new IdleStateHandler(0, heartbeatInterval, 0))
       .addLast(new DelimiterBasedFrameDecoder(Int.MaxValue, Message.delimiter))
-      .addLast(new ByteArrayEncoder)
+      .addLast(Commons.byteArrayEncoder)
       .addLast(new ByteArrayDecoder)
       .addLast(new EncryptHandler(cipher))
       .addLast(new DecryptHandler(cipher))

@@ -4,10 +4,13 @@ import java.net.SocketAddress
 import java.util.concurrent.TimeUnit
 
 import io.netty.channel.{Channel, WriteBufferWaterMark}
+import io.netty.handler.codec.bytes.ByteArrayEncoder
 import io.netty.util.internal.StringUtil
 import org.slf4j.{Logger, LoggerFactory}
 
 object Commons {
+
+  val byteArrayEncoder = new ByteArrayEncoder
 
   var waterMark: WriteBufferWaterMark = WriteBufferWaterMark.DEFAULT
   var localAddress: SocketAddress = _

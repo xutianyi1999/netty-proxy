@@ -3,7 +3,6 @@ package proxy.client
 import com.alibaba.fastjson.JSONObject
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.SocketChannel
-import io.netty.handler.codec.bytes.ByteArrayEncoder
 import proxy.Factory
 import proxy.client.handler.ClientProxyHandler
 import proxy.common._
@@ -31,7 +30,7 @@ object Client {
     }
 
     val initializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
-      .addLast(new ByteArrayEncoder)
+      .addLast(Commons.byteArrayEncoder)
       .addLast(new ClientProxyHandler(getClientMuxChannel))
 
     Factory.createTcpServerBootstrap
