@@ -10,12 +10,14 @@ class RC4(password: String) extends CipherTrait {
   override val keySize: Int = 40
   override val name: String = "RC4"
 
-  private val secureRandom = SecureRandom.getInstance("SHA1PRNG")
-  secureRandom.setSeed(password.getBytes(StandardCharsets.UTF_8))
+  private val key = {
+    val secureRandom = SecureRandom.getInstance("SHA1PRNG")
+    secureRandom.setSeed(password.getBytes(StandardCharsets.UTF_8))
 
-  private val keyGenerator = KeyGenerator.getInstance(name)
-  keyGenerator.init(keySize, secureRandom)
-  private val key = keyGenerator.generateKey()
+    val keyGenerator = KeyGenerator.getInstance(name)
+    keyGenerator.init(keySize, secureRandom)
+    keyGenerator.generateKey()
+  }
 
   override def getEncryptF: Array[Byte] => Array[Byte] = init(Cipher.ENCRYPT_MODE)
 
