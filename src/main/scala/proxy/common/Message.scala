@@ -12,30 +12,30 @@ object Message {
   val heartbeat: Byte = 4
 
   val delimiter: Array[Byte] = "🍔".getBytes(StandardCharsets.UTF_8)
-
-  val connectBytes: Array[Byte] = Array[Byte](connect)
-  val disconnectBytes: Array[Byte] = Array[Byte](disconnect)
-  val dataMessageBytes: Array[Byte] = Array[Byte](data)
   val heartbeatTemplate: Array[Byte] = Array[Byte](heartbeat)
 
-  import proxy.common.Convert.MessageConvert
+  def connectMessageTemplate(implicit channelId: String): Array[Byte] = {
+    connect +: channelId.getBytes(StandardCharsets.UTF_8)
+  }
 
-  def connectMessageTemplate(implicit channelId: String): Array[Byte] = connectBytes - channelId
+  def disconnectMessageTemplate(implicit channelId: String): Array[Byte] = {
+    disconnect +: channelId.getBytes(StandardCharsets.UTF_8)
+  }
 
-  def disconnectMessageTemplate(implicit channelId: String): Array[Byte] = disconnectBytes - channelId
-
-  def dataMessageTemplate(bytes: Array[Byte])(implicit channelId: String): Array[Byte] = dataMessageBytes - channelId ++ bytes
+  def dataMessageTemplate(bytes: Array[Byte])(implicit channelId: String): Array[Byte] = {
+    (data +: channelId.getBytes(StandardCharsets.UTF_8)) ++ bytes
+  }
 
   def messageMatch(msg: Array[Byte])(fun: String => MessageCase => Unit): Unit = {
-    val messageType = msg.getMessageType
+    val messageType = msg(0)
 
     if (messageType != heartbeat) {
-      val f2 = fun(msg.getChannelId)
+      val f2 = fun(new String(msg.slice(1, 9), StandardCharsets.UTF_8))
 
       messageType match {
         case Message.connect => f2(MessageConnect)
         case Message.disconnect => f2(MessageDisconnect)
-        case Message.data => f2(MessageData(() => msg.getData))
+        case Message.data => f2(MessageData(() => msg.slice(9, msg.length)))
       }
     }
   }

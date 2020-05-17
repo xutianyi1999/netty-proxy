@@ -1,7 +1,5 @@
 package proxy.common
 
-import java.nio.charset.StandardCharsets
-
 import io.netty.buffer.{ByteBuf, ByteBufUtil, Unpooled}
 import io.netty.channel.{Channel, ChannelHandlerContext}
 
@@ -17,17 +15,6 @@ object Convert {
     implicit def channelToChannelId(channel: Channel): String = channel.id().asShortText()
 
     implicit def channelToChannelId(ctx: ChannelHandlerContext): String = ctx.channel()
-  }
-
-  implicit class MessageConvert(msg: Array[Byte]) {
-
-    def -(str: String): Array[Byte] = msg ++ str.getBytes(StandardCharsets.UTF_8)
-
-    def getMessageType: Byte = msg(0)
-
-    def getChannelId: String = new String(msg.slice(1, 9), StandardCharsets.UTF_8)
-
-    def getData: Array[Byte] = msg.slice(9, msg.length)
   }
 
   implicit class ChannelImplicit(channel: Channel) {
