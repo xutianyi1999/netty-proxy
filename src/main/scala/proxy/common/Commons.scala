@@ -1,6 +1,5 @@
 package proxy.common
 
-import java.net.SocketAddress
 import java.util.concurrent.TimeUnit
 
 import io.netty.channel.{Channel, WriteBufferWaterMark}
@@ -13,7 +12,6 @@ object Commons {
   val byteArrayEncoder = new ByteArrayEncoder
 
   var waterMark: WriteBufferWaterMark = WriteBufferWaterMark.DEFAULT
-  var localAddress: SocketAddress = _
   val log: Logger = LoggerFactory.getLogger("netty-proxy")
 
   def printError(cause: Throwable): Unit = {

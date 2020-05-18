@@ -3,8 +3,10 @@ package proxy.client
 import com.alibaba.fastjson.JSONObject
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.SocketChannel
+import io.netty.handler.codec.socksx.v5.{Socks5CommandRequestDecoder, Socks5InitialRequestDecoder, Socks5ServerEncoder}
 import proxy.Factory
 import proxy.client.handler.ClientProxyHandler
+import proxy.client.handler.socks5.Socks5InitialRequestHandler
 import proxy.common._
 import proxy.common.crypto.RC4
 
@@ -14,10 +16,6 @@ import scala.util.Random
 object Client {
 
   def start(listen: Int, remote: JSONObject): Unit = {
-    startClientProxy(listen, remote)
-  }
-
-  private def startClientProxy(listen: Int, remote: JSONObject): Unit = {
     val clientMuxChannelSeq = distribution(remote)
 
     val getClientMuxChannel: () => ClientMuxChannel = { () =>
@@ -29,11 +27,16 @@ object Client {
         throw new Exception("Connection pool is empty")
     }
 
-    val initializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
-      .addLast(Commons.byteArrayEncoder)
-      .addLast(new ClientProxyHandler(getClientMuxChannel))
+    val clientProxyHandler = new ClientProxyHandler(getClientMuxChannel)
 
-    Factory.createTcpServerBootstrap
+    val initializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
+      .addLast(Socks5ServerEncoder.DEFAULT)
+      .addLast(new Socks5InitialRequestDecoder)
+      .addLast(Socks5InitialRequestHandler)
+      .addLast(new Socks5CommandRequestDecoder)
+      .addLast(clientProxyHandler)
+
+    Factory.createServerBootstrap
       .childHandler(initializer)
       .bind(listen)
       .sync()

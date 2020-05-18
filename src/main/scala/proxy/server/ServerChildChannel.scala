@@ -1,5 +1,7 @@
 package proxy.server
 
+import java.net.SocketAddress
+
 import io.netty.buffer.ByteBuf
 import io.netty.channel._
 import io.netty.channel.socket.DuplexChannel
@@ -8,7 +10,10 @@ import io.netty.util.concurrent.GenericFutureListener
 import proxy.Factory
 import proxy.common.Commons
 
-class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () => Unit, eventLoop: EventLoop) {
+class ServerChildChannel(socketAddress: SocketAddress,
+                         write: (ByteBuf, Channel) => Unit,
+                         closeListener: () => Unit,
+                         eventLoop: EventLoop) {
 
   private var isInitiativeClose = false
 
@@ -23,9 +28,9 @@ class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () =>
       }
     }
 
-  private val channelFuture = Factory.createLocalBootstrap(eventLoop)
+  private val channelFuture = Factory.createBootstrap(eventLoop)
     .handler(localInitializer)
-    .connect(Commons.localAddress)
+    .connect(socketAddress)
 
   private val channel = channelFuture.channel()
 
@@ -39,7 +44,7 @@ class ServerChildChannel(write: (ByteBuf, Channel) => Unit, closeListener: () =>
 
   channelFuture.addListener(connectListener)
 
-  def writeToLocal(msg: Array[Byte]): Unit =
+  def writeToRemote(msg: Array[Byte]): Unit =
     if (channel.isActive)
       channel.writeAndFlush(msg)
     else

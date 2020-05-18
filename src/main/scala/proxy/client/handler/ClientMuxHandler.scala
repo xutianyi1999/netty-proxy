@@ -7,16 +7,13 @@ import proxy.common.`case`._
 
 class ClientMuxHandler(disconnectListener: () => Unit,
                        write: (String, => Array[Byte]) => Unit,
-                       close: CloseCase => Unit) extends SimpleChannelInboundHandler[Array[Byte]] {
+                       close: String => Unit) extends SimpleChannelInboundHandler[Array[Byte]] {
 
-  override def channelInactive(ctx: ChannelHandlerContext): Unit = {
-    disconnectListener()
-    close(CloseAll)
-  }
+  override def channelInactive(ctx: ChannelHandlerContext): Unit = disconnectListener()
 
   override def channelRead0(ctx: ChannelHandlerContext, msg: Array[Byte]): Unit =
     Message.messageMatch(msg)(channelId => {
-      case MessageDisconnect => close(CloseOne(channelId))
+      case MessageDisconnect => close(channelId)
       case MessageData(f) => write(channelId, f())
       case _ =>
     })

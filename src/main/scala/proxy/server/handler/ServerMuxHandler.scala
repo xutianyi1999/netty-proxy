@@ -16,7 +16,7 @@ class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
 
   override def channelRead0(ctx: ChannelHandlerContext, msg: Array[Byte]): Unit =
     Message.messageMatch(msg)(remoteChannelId => {
-      case MessageConnect =>
+      case MessageConnect(address) =>
         val write: (ByteBuf, Channel) => Unit = (byteBuf, readChannel) => {
           import proxy.common.Convert.ByteBufConvert.byteBufToByteArray
 
@@ -25,16 +25,16 @@ class ServerMuxHandler extends SimpleChannelInboundHandler[Array[Byte]] {
           Commons.trafficShaping(ctx.channel, readChannel)
         }
 
-        val disconnectListener: () => Unit = () => {
+        val closeListener: () => Unit = () => {
           map.remove(remoteChannelId)
           ctx.writeAndFlush(Message.disconnectMessageTemplate(remoteChannelId))
         }
 
-        val childChannel = new ServerChildChannel(write, disconnectListener, ctx.channel().eventLoop())
+        val childChannel = new ServerChildChannel(address, write, closeListener, ctx.channel().eventLoop())
         map.put(remoteChannelId, childChannel)
 
       case MessageDisconnect => map.remove(remoteChannelId).foreach(_.close())
 
-      case MessageData(f) => map.get(remoteChannelId).foreach(_.writeToLocal(f()))
+      case MessageData(f) => map.get(remoteChannelId).foreach(_.writeToRemote(f()))
     })
 }

@@ -11,7 +11,6 @@ import io.netty.util.concurrent.GenericFutureListener
 import proxy.Factory
 import proxy.client.handler.ClientMuxHandler
 import proxy.common._
-import proxy.common.`case`.{CloseAll, CloseCase, CloseOne}
 import proxy.common.crypto.CipherTrait
 import proxy.common.handler.{DecryptHandler, EncryptHandler}
 
@@ -25,27 +24,13 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
 
   def isActive: Boolean = channelOption.isDefined
 
-  def writeToRemote(data: => Array[Byte], readChannel: Channel): Unit =
-    channelOption.foreach { remoteChannel =>
-      remoteChannel.writeAndFlush(data)
-      Commons.trafficShaping(remoteChannel, readChannel)
-    }
-
   import proxy.common.Convert.ChannelIdConvert._
   import proxy.common.Convert.ChannelImplicit
 
-  def register(localChannel: Channel): Unit = channelOption match {
-    case Some(remoteChannel) => remoteChannel.eventLoop().execute { () =>
-      if (remoteChannel.isActive) {
-        implicit val localChannelId: String = localChannel
+  private val close: String => Unit = map.remove(_).foreach(_.safeClose())
 
-        map.put(localChannelId, localChannel)
-        remoteChannel.writeAndFlush(Message.connectMessageTemplate)
-      } else localChannel.safeClose()
-    }
-
-    case None => localChannel.safeClose()
-  }
+  private val bootstrap = Factory.createBootstrap()
+    .option[WriteBufferWaterMark](ChannelOption.WRITE_BUFFER_WATER_MARK, Commons.waterMark)
 
   def remove(channelId: String): Unit = if (map.remove(channelId).isDefined) {
     channelOption.foreach(_.writeAndFlush(Message.disconnectMessageTemplate(channelId)))
@@ -54,18 +39,23 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
   private val writeToLocal: (String, => Array[Byte]) => Unit = (channelId, data) => {
     map.get(channelId).foreach(_.writeAndFlush(data))
   }
+  private val disconnectListener = () => {
+    Commons.log.error(s"$name disconnected")
+    channelOption = Option.empty
 
-  private val close: CloseCase => Unit = {
-    case CloseAll =>
-      val values = map.values
-      map.clear()
-      values.foreach(_.safeClose())
+    val values = map.values
+    map.clear()
+    values.foreach(_.safeClose())
 
-    case CloseOne(channelId) => map.remove(channelId).foreach(_.safeClose())
+    connect()
   }
 
-  private val bootstrap = Factory.createTcpBootstrap()
-    .option[WriteBufferWaterMark](ChannelOption.WRITE_BUFFER_WATER_MARK, Commons.waterMark)
+  def writeToRemote(data: => Array[Byte], readChannel: Channel): Unit =
+    channelOption.foreach { remoteChannel =>
+      import proxy.common.Convert.ChannelIdConvert.channelToChannelId
+      remoteChannel.writeAndFlush(Message.dataMessageTemplate(data)(readChannel))
+      Commons.trafficShaping(remoteChannel, readChannel)
+    }
 
   private val connectListener: GenericFutureListener[ChannelFuture] = future =>
     if (future.isSuccess) {
@@ -81,10 +71,18 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
     3, TimeUnit.SECONDS
   )
 
-  private val disconnectListener = () => {
-    Commons.log.error(s"$name disconnected")
-    channelOption = Option.empty
-    connect()
+  def register(localChannel: Channel, address: String, port: Int, f: Boolean => Unit): Unit = channelOption match {
+    case Some(remoteChannel) => remoteChannel.eventLoop().execute { () =>
+      if (remoteChannel.isActive) {
+        implicit val localChannelId: String = localChannel
+
+        map.put(localChannelId, localChannel)
+        remoteChannel.writeAndFlush(Message.connectMessageTemplate(address, port))
+        f(true)
+      } else f(false)
+    }
+
+    case None => f(false)
   }
 
   private val clientInitializer: ChannelInitializer[SocketChannel] = socketChannel => {
