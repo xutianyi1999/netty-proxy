@@ -36,7 +36,6 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
 
   def writeToRemote(data: => Array[Byte], readChannel: Channel): Unit =
     channelOption.foreach { remoteChannel =>
-      import proxy.common.Convert.ChannelIdConvert.channelToChannelId
       remoteChannel.writeAndFlush(Message.dataMessageTemplate(data)(readChannel))
       Commons.trafficShaping(remoteChannel, readChannel)
     }
@@ -46,8 +45,8 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
       if (remoteChannel.isActive) {
         implicit val localChannelId: String = localChannel
 
-        map.put(localChannelId, localChannel)
         remoteChannel.writeAndFlush(Message.connectMessageTemplate(address, port))
+        map.put(localChannelId, localChannel)
         f(true)
       } else f(false)
     }
