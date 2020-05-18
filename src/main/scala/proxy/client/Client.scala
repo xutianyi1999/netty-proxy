@@ -34,6 +34,7 @@ object Client {
       .addLast(new Socks5InitialRequestDecoder)
       .addLast(Socks5InitialRequestHandler)
       .addLast(new Socks5CommandRequestDecoder)
+      .addLast(Commons.byteArrayEncoder)
       .addLast(clientProxyHandler)
 
     Factory.createServerBootstrap
