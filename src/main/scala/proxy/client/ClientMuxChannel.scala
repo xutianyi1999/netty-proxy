@@ -30,23 +30,6 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
   import proxy.common.Convert.ChannelIdConvert._
   import proxy.common.Convert.ChannelImplicit
 
-  private val close: String => Unit = map.remove(_).foreach(_.safeClose())
-
-  private val writeToLocal: (String, => Array[Byte]) => Unit = (channelId, data) => {
-    map.get(channelId).foreach(_.writeAndFlush(data))
-  }
-
-  private val disconnectListener = () => {
-    Commons.log.error(s"$name disconnected")
-    channelOption = Option.empty
-
-    val values = map.values
-    map.clear()
-    values.foreach(_.safeClose())
-
-    connect()
-  }
-
   def remove(channelId: String): Unit = if (map.remove(channelId).isDefined) {
     channelOption.foreach(_.writeAndFlush(Message.disconnectMessageTemplate(channelId)))
   }
@@ -56,15 +39,6 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
       import proxy.common.Convert.ChannelIdConvert.channelToChannelId
       remoteChannel.writeAndFlush(Message.dataMessageTemplate(data)(readChannel))
       Commons.trafficShaping(remoteChannel, readChannel)
-    }
-
-  private val connectListener: GenericFutureListener[ChannelFuture] = future =>
-    if (future.isSuccess) {
-      Commons.log.info(s"$name connected")
-      channelOption = Option(future.channel())
-    } else {
-      Commons.printError(future.cause())
-      connect()
     }
 
   private def connect(): Unit = Factory.delay(() =>
@@ -85,6 +59,32 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
 
     case None => f(false)
   }
+
+  private val close: String => Unit = map.remove(_).foreach(_.safeClose())
+
+  private val writeToLocal: (String, => Array[Byte]) => Unit = (channelId, data) => {
+    map.get(channelId).foreach(_.writeAndFlush(data))
+  }
+
+  private val disconnectListener = () => {
+    Commons.log.error(s"$name disconnected")
+    channelOption = Option.empty
+
+    val values = map.values
+    map.clear()
+    values.foreach(_.safeClose())
+
+    connect()
+  }
+
+  private val connectListener: GenericFutureListener[ChannelFuture] = future =>
+    if (future.isSuccess) {
+      Commons.log.info(s"$name connected")
+      channelOption = Option(future.channel())
+    } else {
+      Commons.printError(future.cause())
+      connect()
+    }
 
   private val clientInitializer: ChannelInitializer[SocketChannel] = socketChannel => {
     import proxy.common.Convert.ByteBufConvert.byteArrayToByteBuf
