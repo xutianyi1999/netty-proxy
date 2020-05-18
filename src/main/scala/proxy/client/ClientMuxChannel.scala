@@ -41,11 +41,6 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
       Commons.trafficShaping(remoteChannel, readChannel)
     }
 
-  private def connect(): Unit = Factory.delay(() =>
-    bootstrap.connect(host, port).addListener(connectListener),
-    3, TimeUnit.SECONDS
-  )
-
   def register(localChannel: Channel, address: String, port: Int, f: Boolean => Unit): Unit = channelOption match {
     case Some(remoteChannel) => remoteChannel.eventLoop().execute { () =>
       if (remoteChannel.isActive) {
@@ -59,6 +54,11 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
 
     case None => f(false)
   }
+
+  private def connect(): Unit = Factory.delay(() =>
+    bootstrap.connect(host, port).addListener(connectListener),
+    3, TimeUnit.SECONDS
+  )
 
   private val close: String => Unit = map.remove(_).foreach(_.safeClose())
 
