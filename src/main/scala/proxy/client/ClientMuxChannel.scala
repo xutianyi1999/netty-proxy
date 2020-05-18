@@ -24,21 +24,18 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
 
   def isActive: Boolean = channelOption.isDefined
 
+  private val bootstrap = Factory.createBootstrap()
+    .option[WriteBufferWaterMark](ChannelOption.WRITE_BUFFER_WATER_MARK, Commons.waterMark)
+
   import proxy.common.Convert.ChannelIdConvert._
   import proxy.common.Convert.ChannelImplicit
 
   private val close: String => Unit = map.remove(_).foreach(_.safeClose())
 
-  private val bootstrap = Factory.createBootstrap()
-    .option[WriteBufferWaterMark](ChannelOption.WRITE_BUFFER_WATER_MARK, Commons.waterMark)
-
-  def remove(channelId: String): Unit = if (map.remove(channelId).isDefined) {
-    channelOption.foreach(_.writeAndFlush(Message.disconnectMessageTemplate(channelId)))
-  }
-
   private val writeToLocal: (String, => Array[Byte]) => Unit = (channelId, data) => {
     map.get(channelId).foreach(_.writeAndFlush(data))
   }
+
   private val disconnectListener = () => {
     Commons.log.error(s"$name disconnected")
     channelOption = Option.empty
@@ -48,6 +45,10 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
     values.foreach(_.safeClose())
 
     connect()
+  }
+
+  def remove(channelId: String): Unit = if (map.remove(channelId).isDefined) {
+    channelOption.foreach(_.writeAndFlush(Message.disconnectMessageTemplate(channelId)))
   }
 
   def writeToRemote(data: => Array[Byte], readChannel: Channel): Unit =

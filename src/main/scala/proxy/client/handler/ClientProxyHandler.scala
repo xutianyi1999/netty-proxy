@@ -35,16 +35,15 @@ class ClientProxyHandler(getClientMuxChannel: () => ClientMuxChannel) extends Si
   }
 }
 
-class InboundHandler(clientMuxChannel: ClientMuxChannel) extends ChannelInboundHandlerAdapter {
+class InboundHandler(clientMuxChannel: ClientMuxChannel) extends SimpleChannelInboundHandler[ByteBuf] {
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = {
     import proxy.common.Convert.ChannelIdConvert.channelToChannelId
     clientMuxChannel.remove(ctx)
   }
 
-  override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
+  override def channelRead0(ctx: ChannelHandlerContext, msg: ByteBuf): Unit = {
     import proxy.common.Convert.ByteBufConvert.byteBufToByteArray
-    val data = msg.asInstanceOf[ByteBuf]
-    clientMuxChannel.writeToRemote(data, ctx.channel())
+    clientMuxChannel.writeToRemote(msg, ctx.channel())
   }
 }

@@ -16,7 +16,7 @@ object Message {
   val heartbeatTemplate: Array[Byte] = Array[Byte](heartbeat)
 
   def connectMessageTemplate(address: String, port: Int)(implicit channelId: String): Array[Byte] = {
-    connect +: (channelId + address + ":" + port).getBytes(StandardCharsets.UTF_8)
+    connect +: (channelId + address + ':' + port).getBytes(StandardCharsets.UTF_8)
   }
 
   def disconnectMessageTemplate(implicit channelId: String): Array[Byte] = {
@@ -36,7 +36,7 @@ object Message {
 
       messageType match {
         case Message.connect =>
-          val address = new String(msg.slice(9, msg.length), StandardCharsets.UTF_8).split(":")
+          val address = new String(msg.slice(9, msg.length), StandardCharsets.UTF_8).split(':')
           f2(MessageConnect(new InetSocketAddress(address(0), address(1).toInt)))
 
         case Message.disconnect => f2(MessageDisconnect)
