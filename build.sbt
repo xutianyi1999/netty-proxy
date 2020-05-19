@@ -32,7 +32,11 @@ assemblyMergeStrategy in assembly := {
 }
 
 scalacOptions ++= Seq(
+  "-language:implicitConversions",
+  "-language:existentials",
   "-encoding", "utf8",
-  "-optimize",
-  "-release", "11"
+  "-release", "11",
+  "-deprecation",
+  "-feature",
+  "-opt:l:inline"
 )
