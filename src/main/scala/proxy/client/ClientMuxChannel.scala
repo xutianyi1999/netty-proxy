@@ -66,7 +66,6 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
   }
 
   private val disconnectListener = () => {
-    Commons.log.error(s"$name disconnected")
     channelOption = Option.empty
 
     val values = map.values
@@ -74,6 +73,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
     values.foreach(_.safeClose())
 
     connect()
+    Commons.log.error(s"$name disconnected")
   }
 
   private val connectListener: GenericFutureListener[ChannelFuture] = future =>
