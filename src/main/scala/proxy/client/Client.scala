@@ -55,7 +55,7 @@ object Client {
       rc4 = new RC4(json.getString("key"))
 
       id <- 1 to count
-    } yield new ClientMuxChannel(s"${tuple._1}-$id", host, port, rc4, heartbeatInterval, printHost: Boolean)
+    } yield new ClientMuxChannel(s"${tuple._1}-$id", host, port, rc4, heartbeatInterval, printHost)
 
     l.toIndexedSeq
   }
