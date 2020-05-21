@@ -4,7 +4,7 @@ import java.net.SocketAddress
 
 import io.netty.buffer.ByteBuf
 import io.netty.channel._
-import io.netty.channel.socket.DuplexChannel
+import io.netty.channel.socket.SocketChannel
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.util.concurrent.GenericFutureListener
 import proxy.Factory
@@ -17,7 +17,7 @@ class ServerChildChannel(socketAddress: SocketAddress,
 
   private var isInitiativeClose = false
 
-  private val localInitializer: ChannelInitializer[DuplexChannel] = socketChannel => socketChannel.pipeline()
+  private val localInitializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
     .addLast(new ReadTimeoutHandler(Commons.readTimeOut))
     .addLast(Commons.byteArrayEncoder)
     .addLast {
