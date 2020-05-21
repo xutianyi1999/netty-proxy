@@ -17,7 +17,7 @@ class ServerChildChannel(socketAddress: SocketAddress,
 
   private var isInitiativeClose = false
 
-  private val localInitializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
+  private val initializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
     .addLast(new ReadTimeoutHandler(Commons.readTimeOut))
     .addLast(Commons.byteArrayEncoder)
     .addLast {
@@ -29,7 +29,7 @@ class ServerChildChannel(socketAddress: SocketAddress,
     }
 
   private val channelFuture = Factory.createBootstrap(eventLoop)
-    .handler(localInitializer)
+    .handler(initializer)
     .connect(socketAddress)
 
   private val channel = channelFuture.channel()
