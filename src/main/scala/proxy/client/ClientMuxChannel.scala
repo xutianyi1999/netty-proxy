@@ -57,8 +57,7 @@ class ClientMuxChannel(name: String, host: String, port: Int,
   }
 
   private def connect(): Unit = Factory.delay(() =>
-    bootstrap.connect(host, port).addListener(connectListener),
-    3, TimeUnit.SECONDS
+    bootstrap.connect(host, port).addListener(connectListener), 3, TimeUnit.SECONDS
   )
 
   private val close: String => Unit = map.remove(_).foreach(_.safeClose())
