@@ -18,13 +18,11 @@ object Client {
   def start(listen: Int, remote: JSONObject): Unit = {
     val clientMuxChannelSeq = distribution(remote)
 
-    val getClientMuxChannel: () => ClientMuxChannel = { () =>
+    val getClientMuxChannel: () => Option[ClientMuxChannel] = { () =>
       val seq = clientMuxChannelSeq.filter(_.isActive)
 
-      if (seq.nonEmpty)
-        seq(Random.nextInt(seq.length))
-      else
-        throw new Exception("Connection pool is empty")
+      if (seq.nonEmpty) Option(seq(Random.nextInt(seq.length)))
+      else Option.empty
     }
 
     val clientProxyHandler = new ClientProxyHandler(getClientMuxChannel)

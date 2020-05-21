@@ -5,9 +5,10 @@ import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel._
 import io.netty.handler.codec.socksx.v5._
 import proxy.client.ClientMuxChannel
+import proxy.common.Commons
 
 @Sharable
-class ClientProxyHandler(getClientMuxChannel: () => ClientMuxChannel) extends SimpleChannelInboundHandler[DefaultSocks5CommandRequest] {
+class ClientProxyHandler(getClientMuxChannel: () => Option[ClientMuxChannel]) extends SimpleChannelInboundHandler[DefaultSocks5CommandRequest] {
 
   val success = new DefaultSocks5CommandResponse(Socks5CommandStatus.SUCCESS, Socks5AddressType.IPv4)
   val failure = new DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, Socks5AddressType.IPv4)
@@ -18,16 +19,20 @@ class ClientProxyHandler(getClientMuxChannel: () => ClientMuxChannel) extends Si
 
     if (res.isSuccess)
       if (msg.`type`().equals(Socks5CommandType.CONNECT)) {
-        val clientMuxChannel = getClientMuxChannel()
+        getClientMuxChannel() match {
+          case Some(clientMuxChannel) =>
+            val f: Boolean => Unit = if (_) {
+              ctx.pipeline().addLast(new InboundHandler(clientMuxChannel))
+              ctx.writeAndFlush(success)
+            } else {
+              ctx.writeAndFlush(failure).addListener(ChannelFutureListener.CLOSE)
+            }
+            clientMuxChannel.register(ctx.channel(), msg.dstAddr(), msg.dstPort(), f)
 
-        val f: Boolean => Unit = if (_) {
-          ctx.pipeline().addLast(new InboundHandler(clientMuxChannel))
-          ctx.writeAndFlush(success)
-        } else {
-          ctx.writeAndFlush(failure).addListener(ChannelFutureListener.CLOSE)
+          case None =>
+            ctx.writeAndFlush(failure).addListener(ChannelFutureListener.CLOSE)
+            Commons.log.error("Connection pool is empty")
         }
-
-        clientMuxChannel.register(ctx.channel(), msg.dstAddr(), msg.dstPort(), f)
       } else
         ctx.writeAndFlush(unsupported).addListener(ChannelFutureListener.CLOSE)
     else
