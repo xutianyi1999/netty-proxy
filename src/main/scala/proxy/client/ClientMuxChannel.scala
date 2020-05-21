@@ -17,7 +17,8 @@ import proxy.common.handler.{DecryptHandler, EncryptHandler}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrait, heartbeatInterval: Int) {
+class ClientMuxChannel(name: String, host: String, port: Int,
+                       cipher: CipherTrait, heartbeatInterval: Int, printHost: Boolean) {
 
   private val map: mutable.Map[String, Channel] = new ConcurrentHashMap[String, Channel].asScala
   @volatile private var channelOption = Option.empty[Channel]
@@ -43,6 +44,7 @@ class ClientMuxChannel(name: String, host: String, port: Int, cipher: CipherTrai
   def register(localChannel: Channel, address: String, port: Int, f: Boolean => Unit): Unit = channelOption match {
     case Some(remoteChannel) => remoteChannel.eventLoop().execute { () =>
       if (remoteChannel.isActive) {
+        if (printHost) Commons.log.info(s"proxy -> $address:$port")
         implicit val localChannelId: String = localChannel
 
         remoteChannel.writeAndFlush(Message.connectMessageTemplate(address, port))

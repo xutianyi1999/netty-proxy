@@ -15,8 +15,8 @@ import scala.util.Random
 
 object Client {
 
-  def start(listen: Int, remote: JSONObject): Unit = {
-    val clientMuxChannelSeq = distribution(remote)
+  def start(listen: Int, remote: JSONObject, printHost: Boolean): Unit = {
+    val clientMuxChannelSeq = distribution(remote, printHost)
 
     val getClientMuxChannel: () => Option[ClientMuxChannel] = { () =>
       val seq = clientMuxChannelSeq.filter(_.isActive)
@@ -43,7 +43,7 @@ object Client {
     Commons.log.info(s"Listen: $listen")
   }
 
-  private def distribution(jsonObject: JSONObject): Seq[ClientMuxChannel] = {
+  private def distribution(jsonObject: JSONObject, printHost: Boolean): Seq[ClientMuxChannel] = {
     val l = for {
       tuple <- jsonObject.asScala
       json = tuple._2.asInstanceOf[JSONObject]
@@ -55,7 +55,7 @@ object Client {
       rc4 = new RC4(json.getString("key"))
 
       id <- 1 to count
-    } yield new ClientMuxChannel(s"${tuple._1}-$id", host, port, rc4, heartbeatInterval)
+    } yield new ClientMuxChannel(s"${tuple._1}-$id", host, port, rc4, heartbeatInterval, printHost: Boolean)
 
     l.toIndexedSeq
   }

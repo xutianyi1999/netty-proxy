@@ -28,6 +28,7 @@ socks5 代理
 ```json
 {
   "listen": 10080,
+  "printHost": true,
   "remote": {
     "US": {
       "connections": 5,
@@ -53,6 +54,7 @@ socks5 代理
 }
 ```
 - listen: 本地socks5协议监听端口
+- printHost: 输出代理主机日志
 - US/HK: 节点名称
 - connections: 连接池大小
 - heartbeatInterval: 心跳包间隔(秒)

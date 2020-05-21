@@ -11,9 +11,7 @@ import proxy.server.Server
 
 object Launcher extends App {
 
-  import proxy.common.Commons.autoClose
-
-  val config = autoClose(new FileInputStream(args(1))) {
+  val config = Commons.autoClose(new FileInputStream(args(1))) {
     JSON.parseObject[JSONObject](_, StandardCharsets.UTF_8, classOf[JSONObject])
   }
 
@@ -43,6 +41,7 @@ object Launcher extends App {
 
   def client(): Unit = Client.start(
     config.getIntValue("listen"),
-    config.getJSONObject("remote")
+    config.getJSONObject("remote"),
+    config.getBoolean("printHost")
   )
 }
