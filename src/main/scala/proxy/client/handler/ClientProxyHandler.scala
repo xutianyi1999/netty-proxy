@@ -19,13 +19,13 @@ class ClientProxyHandler(getClientMuxChannel: () => Option[ClientMuxChannel]) ex
 
     if (res.isSuccess)
       if (msg.`type`().equals(Socks5CommandType.CONNECT)) {
-        getClientMuxChannel() match {
+        def fun(): Unit = getClientMuxChannel() match {
           case Some(clientMuxChannel) =>
             val f: Boolean => Unit = if (_) {
               ctx.pipeline().addLast(new InboundHandler(clientMuxChannel))
               ctx.writeAndFlush(success)
             } else {
-              ctx.writeAndFlush(failure).addListener(ChannelFutureListener.CLOSE)
+              fun()
             }
             clientMuxChannel.register(ctx.channel(), msg.dstAddr(), msg.dstPort(), f)
 
@@ -33,6 +33,8 @@ class ClientProxyHandler(getClientMuxChannel: () => Option[ClientMuxChannel]) ex
             ctx.writeAndFlush(failure).addListener(ChannelFutureListener.CLOSE)
             Commons.log.error("Connection pool is empty")
         }
+
+        fun()
       } else
         ctx.writeAndFlush(unsupported).addListener(ChannelFutureListener.CLOSE)
     else
