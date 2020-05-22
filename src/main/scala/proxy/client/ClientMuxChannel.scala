@@ -44,7 +44,7 @@ class ClientMuxChannel(name: String, host: String, port: Int,
   def register(localChannel: Channel, address: String, port: Int, f: Boolean => Unit): Unit = channelOption match {
     case Some(remoteChannel) => remoteChannel.eventLoop().execute { () =>
       if (remoteChannel.isActive) {
-        if (printHost) Commons.log.info(s"proxy -> $address:$port")
+        if (printHost) Commons.log.info(s"proxy: $name -> $address:$port")
         implicit val localChannelId: String = localChannel
 
         remoteChannel.writeAndFlush(Message.connectMessageTemplate(address, port))
