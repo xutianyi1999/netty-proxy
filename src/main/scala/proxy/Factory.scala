@@ -12,14 +12,13 @@ import proxy.common.Commons
 
 object Factory {
 
-  private val (group, serverSocketChannel, socketChannel) =
-    if (Epoll.isAvailable) {
-      Commons.log.info("Epoll transport")
+  private val (group, serverSocketChannel, socketChannel) = if (Epoll.isAvailable) {
+    Commons.log.info("Epoll transport")
 
-      (new EpollEventLoopGroup(), classOf[EpollServerSocketChannel], classOf[EpollSocketChannel])
-    } else {
-      (new NioEventLoopGroup(), classOf[NioServerSocketChannel], classOf[NioSocketChannel])
-    }
+    (new EpollEventLoopGroup(), classOf[EpollServerSocketChannel], classOf[EpollSocketChannel])
+  } else {
+    (new NioEventLoopGroup(), classOf[NioServerSocketChannel], classOf[NioSocketChannel])
+  }
 
   def createBootstrap(eventLoopGroup: EventLoopGroup = group): Bootstrap = new Bootstrap()
     .group(eventLoopGroup)
