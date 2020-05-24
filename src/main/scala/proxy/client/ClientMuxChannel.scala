@@ -41,7 +41,7 @@ class ClientMuxChannel(name: String, host: String, port: Int,
       Commons.trafficShaping(remoteChannel, readChannel)
     }
 
-  def register(localChannel: Channel, address: String, port: Int, f: Boolean => Unit): Unit = channelOption match {
+  def register(localChannel: Channel, address: String, port: Int)(callback: Boolean => Unit): Unit = channelOption match {
     case Some(remoteChannel) => remoteChannel.eventLoop().execute { () =>
       if (remoteChannel.isActive) {
         if (printHost) Commons.log.info(s"[${localChannel.remoteAddress()}] $name -> $address:$port")
@@ -49,11 +49,11 @@ class ClientMuxChannel(name: String, host: String, port: Int,
 
         remoteChannel.writeAndFlush(Message.connectMessageTemplate(address, port))
         map.put(localChannelId, localChannel)
-        f(true)
-      } else f(false)
+        callback(true)
+      } else callback(false)
     }
 
-    case None => f(false)
+    case None => callback(false)
   }
 
   private def connect(): Unit = Factory.delay(() =>

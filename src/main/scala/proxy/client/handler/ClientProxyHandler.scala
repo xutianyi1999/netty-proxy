@@ -21,13 +21,12 @@ class ClientProxyHandler(getClientMuxChannel: () => Option[ClientMuxChannel]) ex
       if (msg.`type`().equals(Socks5CommandType.CONNECT)) {
         def fun(): Unit = getClientMuxChannel() match {
           case Some(clientMuxChannel) =>
-            val f: Boolean => Unit = if (_) {
-              ctx.pipeline().addLast(new InboundHandler(clientMuxChannel))
-              ctx.writeAndFlush(success)
-            } else {
-              fun()
+            clientMuxChannel.register(ctx.channel(), msg.dstAddr(), msg.dstPort()) {
+              if (_) {
+                ctx.pipeline().addLast(new InboundHandler(clientMuxChannel))
+                ctx.writeAndFlush(success)
+              } else fun()
             }
-            clientMuxChannel.register(ctx.channel(), msg.dstAddr(), msg.dstPort(), f)
 
           case None =>
             ctx.writeAndFlush(failure).addListener(ChannelFutureListener.CLOSE)
