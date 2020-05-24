@@ -3,6 +3,7 @@ package proxy.common
 import java.util.concurrent.TimeUnit
 
 import io.netty.channel.{Channel, WriteBufferWaterMark}
+import io.netty.handler.codec.LengthFieldPrepender
 import io.netty.handler.codec.bytes.ByteArrayEncoder
 import io.netty.util.internal.StringUtil
 import org.slf4j.{Logger, LoggerFactory}
@@ -10,6 +11,7 @@ import org.slf4j.{Logger, LoggerFactory}
 object Commons {
 
   val byteArrayEncoder = new ByteArrayEncoder
+  val lengthFieldPrepender = new LengthFieldPrepender(4)
 
   var waterMark: WriteBufferWaterMark = WriteBufferWaterMark.DEFAULT
   val log: Logger = LoggerFactory.getLogger("netty-proxy")

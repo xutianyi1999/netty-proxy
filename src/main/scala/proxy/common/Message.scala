@@ -12,7 +12,6 @@ object Message {
   val data: Byte = 3
   val heartbeat: Byte = 4
 
-  val delimiter: Array[Byte] = "🍔".getBytes(StandardCharsets.UTF_8)
   val heartbeatTemplate: Array[Byte] = Array[Byte](heartbeat)
 
   def connectMessageTemplate(address: String, port: Int)(implicit channelId: String): Array[Byte] = {

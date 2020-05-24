@@ -1,14 +1,12 @@
 package proxy.common
 
-import io.netty.buffer.{ByteBuf, ByteBufUtil, Unpooled}
+import io.netty.buffer.{ByteBuf, ByteBufUtil}
 import io.netty.channel.{Channel, ChannelHandlerContext}
 
 object Convert {
 
   object ByteBufConvert {
     implicit def byteBufToByteArray(byteBuf: ByteBuf): Array[Byte] = ByteBufUtil.getBytes(byteBuf)
-
-    implicit def byteArrayToByteBuf(bytes: Array[Byte]): ByteBuf = Unpooled.wrappedBuffer(bytes)
   }
 
   object ChannelIdConvert {
