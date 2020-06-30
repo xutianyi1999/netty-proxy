@@ -90,7 +90,7 @@ class ClientMuxChannel(name: String, host: String, port: Int,
     socketChannel.pipeline()
       .addLast(new IdleStateHandler(0, heartbeatInterval, 0))
       .addLast(Commons.lengthFieldPrepender)
-      .addLast(new LengthFieldBasedFrameDecoder(0xffffffff, 0, 4, 0, 4))
+      .addLast(new LengthFieldBasedFrameDecoder(Int.MaxValue, 0, 4, 0, 4))
       .addLast(Commons.byteArrayEncoder)
       .addLast(new ByteArrayDecoder)
       .addLast(new EncryptHandler(cipher))
