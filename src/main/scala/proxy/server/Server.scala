@@ -20,7 +20,7 @@ object Server {
     val tcpInitializer: ChannelInitializer[SocketChannel] = socketChannel => socketChannel.pipeline()
       .addLast(new ReadTimeoutHandler(readTimeOut))
       .addLast(Commons.lengthFieldPrepender)
-      .addLast(new LengthFieldBasedFrameDecoder(Int.MaxValue, 0, 4, 0, 4))
+      .addLast(new LengthFieldBasedFrameDecoder(0xffffffff, 0, 4, 0, 4))
       .addLast(Commons.byteArrayEncoder)
       .addLast(new ByteArrayDecoder)
       .addLast(new EncryptHandler(rc4))
