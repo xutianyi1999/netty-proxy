@@ -4,7 +4,7 @@ version := "0.1"
 
 scalaVersion := "2.12.11"
 
-val nettyVersion = "4.1.50.Final"
+val nettyVersion = "4.1.51.Final"
 
 // https://mvnrepository.com/artifact/io.netty/netty-handler
 libraryDependencies += "io.netty" % "netty-handler" % nettyVersion
